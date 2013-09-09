@@ -51,6 +51,7 @@ edit your projects urls.py to look something like this:
 	)
 
 lastly you need to add a display.py file to each app named in DISPLAY_APPS (see above) to define how the app is displayed.
+
 	import django_tables2 as tables
 	from django_tables2.utils import A
 	import SkeletalDisplay
