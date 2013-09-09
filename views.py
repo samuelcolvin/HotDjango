@@ -17,9 +17,9 @@ import user_settings
 
 import SkeletalDisplay
 
-import UploadedFiles.forms as upload_forms
+# import UploadedFiles.forms as upload_forms
 
-import SalesEstimates.ImportExport as imex
+# import ExcelImportExport.ImportExport as imex
 
 def index(request):
 	page_gen = PageGenerator(request)
@@ -34,15 +34,17 @@ def display_item(request, app_name, model_name, item_id):
 	return page_gen.display_item(app_name, model_name, item_id)
 
 def upload(request):
-	apps = SkeletalDisplay.get_display_apps()
-	(upload_form, log) = upload_forms.display(request)
-	content = {'upload_form': upload_form, 'log': log}
+ 	apps = SkeletalDisplay.get_display_apps()
+# 	(upload_form, log) = upload_forms.display(request)
+# 	content = {'upload_form': upload_form, 'log': log}
+	content = {'upload_form': 'upload_form', 'log': 'log'}
 	return base(request, 'Import Files', content, 'upload.html', apps)
 
 def download(request):
-	apps = SkeletalDisplay.get_display_apps()
-	(url, log) = imex.perform_export()
-	content = {'download_url': url, 'log': log}
+ 	apps = SkeletalDisplay.get_display_apps()
+# 	(url, log) = imex.perform_export()
+# 	content = {'download_url': url, 'log': log}
+	content = {'download_url': '', 'log': ''}
 	return base(request, 'Import Files', content, 'download.html', apps)
 
 class PageGenerator(object):
@@ -126,9 +128,9 @@ class PageGenerator(object):
 			name = field.verbose_name
 			value = self._convert_to_string(getattr(item, field.name), field.name)
 			item_fields.append({'name': name, 'state': value })
-        for func in dm.extra_funcs:
-            value = self._convert_to_string(getattr(item, dm.extra_funcs[func])(), func)
-            item_fields.append({'name': func, 'state': value})
+		for func in dm.extra_funcs:
+			value = self._convert_to_string(getattr(item, dm.extra_funcs[func])(), func)
+			item_fields.append({'name': func, 'state': value})
 		return item_fields
 	
 	def _populate_tables(self, item, model):
@@ -205,7 +207,7 @@ def base(request, title, content, template, apps=None, disp_model=None):
 				main_menu.append({'url': reverse('display_model', args=[app_name, model_name]), 
 								'name': get_plural_name(model), 'class': cls, 'index': model.index})
 	main_menu = sorted(main_menu, key=lambda d: d['index'])
-	site_title = user_settings.get_value('site_title')
+	site_title = settings.SITE_TITLE
 	content.update({'top_menu': top_menu, 'site_title': site_title, 'title': title, 'menu': main_menu, 'content_template': template})
 	return render_to_response('base.html', content, context_instance=RequestContext(request))
 
