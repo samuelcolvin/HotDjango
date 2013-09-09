@@ -126,10 +126,9 @@ class PageGenerator(object):
 			name = field.verbose_name
 			value = self._convert_to_string(getattr(item, field.name), field.name)
 			item_fields.append({'name': name, 'state': value })
-		if hasattr(dm, 'extra_funcs'):
-			for func in dm.extra_funcs:
-				value = self._convert_to_string(getattr(item, func[1])(), func[0])
-				item_fields.append({'name': func[0], 'state': value})
+        for func in dm.extra_funcs:
+            value = self._convert_to_string(getattr(item, dm.extra_funcs[func])(), func)
+            item_fields.append({'name': func, 'state': value})
 		return item_fields
 	
 	def _populate_tables(self, item, model):

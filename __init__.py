@@ -2,7 +2,7 @@ import settings
 import inspect, json
 
 class ModelDisplay:
-    extra_funcs = ()
+    extra_funcs = []
     tables = []
     display = True
     
