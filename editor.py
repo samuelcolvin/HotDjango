@@ -67,13 +67,9 @@ class ModelEditor:
         return base(self._request, self._title, self._content, 'add_edit.html')
 
     def _get_form_model(self):
-        app_forms = __import__(self._app_name + '.forms')
         app_models = __import__(self._app_name + '.models')
         self._model = getattr(app_models.models, self._model_name)
-        if hasattr(app_forms.forms, self._model_name):
-            self._form_metaclass = getattr(app_forms.forms, self._model_name)
-        else:
-            self._form_metaclass = modelform_factory(self._model)
+        self._form_metaclass = modelform_factory(self._model)
     
     def _add_line(self, line):
         self._content['message'] += '<p>%s</p>\n' % line

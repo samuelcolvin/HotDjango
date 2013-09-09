@@ -41,3 +41,14 @@ class _AppEncode(json.JSONEncoder):
         if inspect.isclass(obj):
             return dir(obj)
         return json.JSONEncoder.default(self, dir(obj))
+    
+
+class Logger:
+    def __init__(self):
+        self._log = ''
+        
+    def addline(self, line):
+        self._log +='<p>%s</p>\n' % line
+        
+    def get_log(self):
+        return self._log

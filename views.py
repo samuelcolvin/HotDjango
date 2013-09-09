@@ -13,13 +13,7 @@ from django.db import models
 
 from django_tables2 import RequestConfig
 
-import user_settings
-
 import SkeletalDisplay
-
-# import UploadedFiles.forms as upload_forms
-
-# import ExcelImportExport.ImportExport as imex
 
 def index(request):
 	page_gen = PageGenerator(request)
@@ -32,20 +26,6 @@ def display_model(request, app_name, model_name):
 def display_item(request, app_name, model_name, item_id):
 	page_gen = PageGenerator(request)
 	return page_gen.display_item(app_name, model_name, item_id)
-
-def upload(request):
- 	apps = SkeletalDisplay.get_display_apps()
-# 	(upload_form, log) = upload_forms.display(request)
-# 	content = {'upload_form': upload_form, 'log': log}
-	content = {'upload_form': 'upload_form', 'log': 'log'}
-	return base(request, 'Import Files', content, 'upload.html', apps)
-
-def download(request):
- 	apps = SkeletalDisplay.get_display_apps()
-# 	(url, log) = imex.perform_export()
-# 	content = {'download_url': url, 'log': log}
-	content = {'download_url': '', 'log': ''}
-	return base(request, 'Import Files', content, 'download.html', apps)
 
 class PageGenerator(object):
 	def __init__(self, request):
@@ -62,7 +42,7 @@ class PageGenerator(object):
 		
 	def index(self):
 		content = {'page_menu': ()}
-		return base(self._request, 'Market Trace', content, 'index.html', self._apps)
+		return base(self._request, settings.SITE_TITLE, content, 'index.html', self._apps)
 	
 	def display_model(self, app_name, model_name):
 		self._set_model(app_name, model_name)
@@ -187,13 +167,10 @@ class PageGenerator(object):
 			return '%d' % value
 	
 def base(request, title, content, template, apps=None, disp_model=None):
-	top_menu = [{'url': reverse('upload'), 'name': 'Import'},
-			{'url': reverse('download'), 'name': 'Export'},
-			{'url': reverse('admin:index'), 'name': 'Admin'}]
-			
-			# [{'url': reverse('test_url'), 'name': 'Test URL'},
-			#{'url': reverse('add_trace'), 'name': 'Add Trace'},
-			#{'url': reverse('admin_a_model', args=['index']), 'name': 'Admin'}]
+	top_menu = []
+	for item in settings.EXTRA_TOP_RIGHT_MENU:
+		top_menu.append({'url': reverse(item['url']), 'name': item['name']})
+	top_menu.append({'url': reverse('admin:index'), 'name': 'Admin'})
 	main_menu=[]
 	active = None
 	if disp_model is not None: active = disp_model.__name__
