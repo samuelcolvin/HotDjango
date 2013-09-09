@@ -55,7 +55,7 @@ lastly you need to add a display.py file to each app named in DISPLAY_APPS (see 
 	import django_tables2 as tables
 	from django_tables2.utils import A
 	import SkeletalDisplay
-	import SalesEstimates.models as m
+	import models as m
 	
 	# one class for each model, with name identical to model in models.py:
 	
