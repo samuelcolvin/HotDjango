@@ -1,9 +1,14 @@
 from django.conf.urls import patterns, include, url
 
-urlpatterns = patterns('SkeletalDisplay.views',
+urlpatterns = patterns('',
+    url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}, name='login'),
+)
+
+urlpatterns += patterns('SkeletalDisplay.views',
     url(r'^$', 'index', name='index'),
     url(r'^X/(\w+)/(\w+)/(\d+)$', 'display_item', name='display_item'),
-    url(r'^X/(\w+)/(\w+)$', 'display_model', name='display_model')
+    url(r'^X/(\w+)/(\w+)$', 'display_model', name='display_model'),
+    url(r'^logout/$', 'logout', name='logout'),
 )
 
 urlpatterns += patterns('SkeletalDisplay.editor',

@@ -29,6 +29,9 @@ Then in settings.py add to installed apps, set the date format and provide a lis
 	SHORT_DATETIME_FORMAT = DATETIME_FORMAT
 
 	DISPLAY_APPS = [<<apps to display>>]
+	SITE_TITLE = '<<site name>>'
+	EXTRA_TOP_RIGHT_MENU = [{'url': 'name to reverse', 'name': 'Name for Link'}]
+	LOGIN_REDIRECT_URL = '/'
 
 edit your projects urls.py to look something like this:
 

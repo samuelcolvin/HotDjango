@@ -387,3 +387,12 @@ a:link, a:visited, a:hover, a:focus {
 	font-size: 90%;
 	color: #888;
 }
+
+.login{
+	width: 300px;
+	margin: 80px auto;
+	text-align: left;
+	background-color: white;
+	padding: 50px;
+	border: 1px solid #aaa;
+}

@@ -15,6 +15,9 @@ from django_tables2 import RequestConfig
 
 import SkeletalDisplay
 
+from django.contrib.auth import logout as auth_logout
+from django.http import HttpResponseRedirect
+
 def index(request):
 	page_gen = PageGenerator(request)
 	return page_gen.index()
@@ -26,6 +29,10 @@ def display_model(request, app_name, model_name):
 def display_item(request, app_name, model_name, item_id):
 	page_gen = PageGenerator(request)
 	return page_gen.display_item(app_name, model_name, item_id)
+
+def logout(request):
+	auth_logout(request)
+	return HttpResponseRedirect(reverse('index'))
 
 class PageGenerator(object):
 	def __init__(self, request):
@@ -170,7 +177,10 @@ def base(request, title, content, template, apps=None, disp_model=None):
 	top_menu = []
 	for item in settings.EXTRA_TOP_RIGHT_MENU:
 		top_menu.append({'url': reverse(item['url']), 'name': item['name']})
-	top_menu.append({'url': reverse('admin:index'), 'name': 'Admin'})
+	if request.user.is_staff:
+		top_menu.append({'url': reverse('admin:index'), 'name': 'Admin'})
+	else:
+		top_menu.append({'url': reverse('logout'), 'name': 'Logout'})
 	main_menu=[]
 	active = None
 	if disp_model is not None: active = disp_model.__name__
@@ -186,7 +196,7 @@ def base(request, title, content, template, apps=None, disp_model=None):
 	main_menu = sorted(main_menu, key=lambda d: d['index'])
 	site_title = settings.SITE_TITLE
 	content.update({'top_menu': top_menu, 'site_title': site_title, 'title': title, 'menu': main_menu, 'content_template': template})
-	return render_to_response('base.html', content, context_instance=RequestContext(request))
+	return render_to_response('page_base.html', content, context_instance=RequestContext(request))
 
 def get_plural_name(dm):
 	return dm.model._meta.verbose_name_plural
