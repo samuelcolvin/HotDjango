@@ -1,13 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<title>{% block title %}Sales Estimates{% endblock %}</title>
 		{% load staticfiles %}
 		<link rel="icon" type="image/png" href="{% static "favicon.png" %}" />
+		<link rel="stylesheet" href="{% static "bootstrap.min.css" %}">
+		<link rel="stylesheet" href="{% static "bootstrap-theme.min.css" %}">
 		<link rel="stylesheet" href="{% static "style.css" %}?">
-    	{% block extra_head %}{% endblock extra_head %}
 	</head>
 	<body>
 		{% block content %}{% endblock content %}
+		<script src="//code.jquery.com/jquery.js"></script>
+		<script src="{% static "js/bootstrap.min.js" %}"></script>
 	</body>
 </html>

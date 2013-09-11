@@ -8,7 +8,7 @@ class ModelDisplay:
     
 class ModelDisplayMeta:
     orderable = False
-    attrs = {'class': 'item_list'}
+    attrs = {'class': 'table table-bordered table-condensed'}
     per_page=100
 
 def get_display_apps():

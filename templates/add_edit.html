@@ -1,7 +1,11 @@
 <h2>{{title}}</h2>
-<form id="model-form" method="post" action="">{% csrf_token %}
+<form method="post" action="">
+{% load bootstrap3 %}
+{% csrf_token %}
 {{ main_form.non_form_errors.as_ul }}
-{{ main_form }}
+{% bootstrap_form main_form %}
+{% bootstrap_form_buttons %}
+{% end_bootstrap_form_buttons %}
 
 <div class="table-title"><strong>{{formset.name}}</strong></div>
 {{ formset.management_form }}

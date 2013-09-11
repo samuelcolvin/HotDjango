@@ -63,7 +63,7 @@ class ModelEditor:
             return self._return_form()
     
     def _return_form(self):
-        self._content['main_form'] = self._main_form.as_p
+        self._content['main_form'] = self._main_form
         return base(self._request, self._title, self._content, 'add_edit.html')
 
     def _get_form_model(self):
