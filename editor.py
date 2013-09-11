@@ -22,7 +22,7 @@ class ModelEditor:
         self._model_name = model_name
         self._get_form_model()
         self._content = {}
-        self._content['message'] = ''
+        self._content['success'] = ''
             
     def add_item(self):
         self._title = 'Add %s' % self._model.__name__
@@ -54,7 +54,7 @@ class ModelEditor:
         if self._main_form.is_valid():
             item.save()
             self._add_line('Model saved')
-            self._request.session['message'] = self._content['message']
+            self._request.session['success'] = self._content['success']
             return redirect(reverse('display_item', args=[self._app_name, self._model_name, item.id])) 
         else:
             self._add_line('Form not valid')
@@ -72,4 +72,4 @@ class ModelEditor:
         self._form_metaclass = modelform_factory(self._model)
     
     def _add_line(self, line):
-        self._content['message'] += '<p>%s</p>\n' % line
+        self._content['success'] += '<p>%s</p>\n' % line

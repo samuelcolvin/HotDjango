@@ -1,5 +1,8 @@
-<h4>{{model_title}}</h4>
-<div id="set-list">
-{% load render_table from django_tables2 %}
-{% render_table table %}
-</div>
+{% extends "menu_page.html" %}
+
+{% block maincol_content %}
+	<div id="set-list">
+	{% load render_table from django_tables2 %}
+	{% render_table table %}
+	</div>
+{% endblock %}

@@ -2,6 +2,11 @@
 
 {% block title %}Login{% endblock title %}
 
+{% load staticfiles %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static "login_styles.css" %}?">
+{% endblock extra_css %}
+
 {% block content %}
 <div class="container">
 	<form method="post" class="form-signin">

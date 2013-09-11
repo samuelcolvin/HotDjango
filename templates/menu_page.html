@@ -1,0 +1,21 @@
+{% extends "page_base.html" %}
+
+{% block extra_maincol_classes %}col-sm-9{% endblock %}
+
+{% block top_of_page %}
+	<p class="pull-right visible-xs">
+		<button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas">Toggle nav</button>
+	</p>      
+{% endblock %}
+	
+{% block below_maincol %}
+	<div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
+	  <div class="well sidebar-nav">
+	    <ul class="nav">
+			{% for item in menu %}
+			<li class="{{item.class}}"><a href="{{item.url}}">{{item.name}}</a></li>
+			{% endfor %}
+	    </ul>
+	  </div><!--/.well -->
+	</div><!--/sidebar-->
+{% endblock %}

@@ -17,10 +17,15 @@ import SkeletalDisplay
 
 from django.contrib.auth import logout as auth_logout
 from django.http import HttpResponseRedirect
+import copy
 
 def index(request):
 	page_gen = PageGenerator(request)
 	return page_gen.index()
+
+def display_index(request):
+	page_gen = PageGenerator(request)
+	return page_gen.display_index()
 
 def display_model(request, app_name, model_name):
 	page_gen = PageGenerator(request)
@@ -38,9 +43,13 @@ class PageGenerator(object):
 	def __init__(self, request):
 		self._request = request
 		self._apps = SkeletalDisplay.get_display_apps()
-		self._message = None
+		self._content = {'page_menu': ()}
 		if 'message' in self._request.session:
-			self._message = request.session.pop('message')
+			self._content['info'] = request.session.pop('info')
+		if 'success' in self._request.session:
+			self._content['success'] = request.session.pop('success')
+		if 'error' in self._request.session:
+			self._content['error'] = request.session.pop('error')
 	
 	def _set_model(self, app_name, model_name):
 		self._disp_model = self._find_model(app_name, model_name)
@@ -48,18 +57,23 @@ class PageGenerator(object):
 		self._single_t = self._disp_model.model._meta.verbose_name.title()
 		
 	def index(self):
-		content = {'page_menu': ()}
-		return base(self._request, settings.SITE_TITLE, content, 'index.html', self._apps)
+		return base(self._request, settings.SITE_TITLE, self._content, 'index.html', self._apps)
+		
+	def display_index(self):
+		crums = self._set_crums(set_to = [{'url': reverse('display_index'), 'name': 'Model Display'}])
+		self._content['crums'] = crums
+		return base(self._request, settings.SITE_TITLE, self._content, 'display_index.html', apps=self._apps, top_active='display_index')
 	
 	def display_model(self, app_name, model_name):
 		self._set_model(app_name, model_name)
 		links = [{'url': reverse('add_item', args=[app_name, model_name]), 'name': 'Add ' + self._single_t}]
-		self._request.session['crums'] = [{'app':app_name, 'disp_model':model_name, 'id': -1}]
 		table = self._disp_model.Table(self._disp_model.model.objects.all())
 		RequestConfig(self._request).configure(table)
-		content = {'page_menu': links, 'table': table, 'crums': self._generate_crums(), 'message': self._message,
-				'model_title': self._plural_t}
-		return base(self._request, self._plural_t, content, 'model_display.html', self._apps, self._disp_model)
+		crums = self._set_crums(set_to = [{'url': reverse('display_index'), 'name': 'Model Display'},
+										{'url': reverse('display_model', args=(app_name, model_name)), 'name' : self._plural_t}])
+		
+		self._content.update({'page_menu': links, 'table': table, 'crums': crums, 'model_title': self._plural_t})
+		return base(self._request, self._plural_t, self._content, 'model_display.html', self._apps, self._disp_model, 'display_index')
 		
 	def display_item(self, app_name, model_name, item_id):
 		self._set_model(app_name, model_name)
@@ -67,34 +81,23 @@ class PageGenerator(object):
 		links = [{'url': reverse('add_item', args=[app_name, model_name]), 'name': 'Add ' + self._single_t},
 				{'url': reverse('edit_item', args=[app_name, model_name, item.id]), 'name': 'Edit Item'},
 				{'url': reverse('delete_item', args=[app_name, model_name, item.id]), 'name': 'Delete Item'}]
-		self._request.session['crums'].append({'app':app_name, 'disp_model':model_name, 'id':int(item_id)})
 		status_groups=[]
 		title = '%s: %s' %  (self._single_t, str(item))
 		status_groups.append({'title': title, 'fields': self._populate_fields(item, self._disp_model)})
 		tbelow = self._populate_tables(item, self._disp_model)
-		content = {'page_menu': links, 'status_groups': status_groups, 'crums': self._generate_crums(), 
-			'tables_below': tbelow, 'message': self._message}
-		return base(self._request, self._single_t, content, 'item_display.html', self._apps, self._disp_model)
-
-	def _extract_crums(self, crums_raw):
-		return json.loads(base64.b64decode(crums_raw))
+		name = str(self._disp_model.model.objects.get(id=int(item_id)))
+		crums = self._set_crums(add = [{'url': reverse('display_item', args=(app_name, model_name, int(item_id))), 'name': name}])
+		
+		self._content.update({'page_menu': links, 'status_groups': status_groups, 'crums': crums, 'tables_below': tbelow})
+		return base(self._request, self._single_t, self._content, 'item_display.html', self._apps, self._disp_model, 'display_index')
 	
-	def _generate_crums(self):
-		crums = []
-		crums_up2now = []
-		session_crums = self._request.session['crums']
-		for crum in session_crums:
-			dm = self._find_model(crum['app'], crum['disp_model'])
-			if crum['id'] == -1:
-				crums.append({'url': reverse('display_model', args=(crum['app'], crum['disp_model'])), 'name': get_plural_name(dm)})
-			else:
-				name = dm.model.objects.get(id=int(crum['id']))
-				if len(crums_up2now) == 0:
-					crums.append({'url': reverse('display_item', args=(crum['app'], crum['disp_model'], crum['id'])), 'name': name})
-				else:
-					crums.append({'url': reverse('display_item', args=(crum['app'], crum['disp_model'], crum['id'])), 'name': name})
-			crums_up2now.append(crum)
-		return crums
+	def _set_crums(self, set_to = None, add = None):
+		if set_to is not None:
+			self._request.session['crums'] = set_to
+		if add is not None:
+			if add[0] != self._request.session['crums'][-1]:
+				self._request.session['crums'] += add
+		return self._request.session['crums']
 	
 	def _cap(self, string):
 		words = string.split(' ')
@@ -173,10 +176,14 @@ class PageGenerator(object):
 		else:
 			return '%d' % value
 	
-def base(request, title, content, template, apps=None, disp_model=None):
+def base(request, title, content, template, apps=None, disp_model=None, top_active=None):
 	top_menu = []
-	for item in settings.EXTRA_TOP_RIGHT_MENU:
-		top_menu.append({'url': reverse(item['url']), 'name': item['name']})
+	
+	for item in settings.TOP_MENU:
+		menu_item = {'url': reverse(item['url']), 'name': item['name']}
+		if item['url'] == top_active:
+			menu_item['class'] = 'active'
+		top_menu.append(menu_item)
 	if request.user.is_staff:
 		top_menu.append({'url': reverse('admin:index'), 'name': 'Admin'})
 	else:
@@ -190,13 +197,13 @@ def base(request, title, content, template, apps=None, disp_model=None):
 			model = apps[app_name][model_name]
 			if model.display:
 				cls = ''
-				if model_name == active: cls = 'active'
+				if model_name == active: cls = 'open'
 				main_menu.append({'url': reverse('display_model', args=[app_name, model_name]), 
 								'name': get_plural_name(model), 'class': cls, 'index': model.index})
 	main_menu = sorted(main_menu, key=lambda d: d['index'])
 	site_title = settings.SITE_TITLE
-	content.update({'top_menu': top_menu, 'site_title': site_title, 'title': title, 'menu': main_menu, 'content_template': template})
-	return render_to_response('page_base.html', content, context_instance=RequestContext(request))
+	content.update({'top_menu': top_menu, 'site_title': site_title, 'title': title, 'menu': main_menu})
+	return render_to_response(template, content, context_instance=RequestContext(request))
 
 def get_plural_name(dm):
 	return dm.model._meta.verbose_name_plural
