@@ -1,14 +1,14 @@
 django-skeletal-display
 =======================
 
-django app consisting of simple display module.
+django app for simple display of models using bootstrap
 
 App uses django-tables2 (https://github.com/bradleyayers/django-tables2) to provide a simple dispaly of defined apps.
 
 To use:
 
 install django-tables2 and markdown (used for displaying TextFields in certain situations:
-	(sudo) pip install django-tables2 markdown2
+	(sudo) pip install django-tables2 markdown2 django-bootstrap3
 
 Add folder (named SkeletalDisplay) to project folded.
 
@@ -16,22 +16,27 @@ Then in settings.py add to installed apps, set the date format and provide a lis
 
 	INSTALLED_APPS = [
 		...
-		'SkeletalDisplay',
+	    'SkeletalDisplay',
+		'django_tables2',
+		'bootstrap3',
 		...
 	]
 	
 	...
 
+	#Skeletal Dispaly Settings
+	
 	CUSTOM_DATE_FORMAT = '%Y-%m-%d'
 	CUSTOM_DT_FORMAT = '%Y-%m-%d %H:%M:%S %Z'
 	CUSTOM_SHORT_DT_FORMAT = '%y-%m-%d_%H %M'
 	DATETIME_FORMAT = 'Y-m-d H:i:s'
 	SHORT_DATETIME_FORMAT = DATETIME_FORMAT
-
+	
 	DISPLAY_APPS = [<<apps to display>>]
 	SITE_TITLE = '<<site name>>'
 	EXTRA_TOP_RIGHT_MENU = [{'url': 'name to reverse', 'name': 'Name for Link'}]
 	LOGIN_REDIRECT_URL = '/'
+	INTERNAL_IPS = ('127.0.0.1',)
 
 edit your projects urls.py to look something like this:
 
