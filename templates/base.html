@@ -16,10 +16,11 @@
 	</head>
 	<body>
 		{% block content %}{% endblock %}
-		<script src="//code.jquery.com/jquery.js"></script>
 		{% if debug %}
+		<script src="{% static "js/jquery-1.10.2.js" %}"></script>
 		<script src="{% static "js/bootstrap.js" %}"></script>
 		{% else %}
+		<script src="{% static "js/jquery-1.10.2.min.js" %}"></script>
 		<script src="{% static "js/bootstrap.min.js" %}"></script>
 		{% endif %}
 		{% block extra_js %}{% endblock %}

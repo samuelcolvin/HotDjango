@@ -12,7 +12,21 @@ install django-tables2 and markdown (used for displaying TextFields in certain s
 
 Add folder (named SkeletalDisplay) to project folded.
 
-Then in settings.py add to installed apps, set the date format and provide a list of apps which you wish to display with this app.
+Edit settings.py
+
+	# make sure TEMPLATE_CONTEXT_PROCESSORS is included and includes auth
+	TEMPLATE_CONTEXT_PROCESSORS =(
+		"django.contrib.auth.context_processors.auth",
+		"django.core.context_processors.debug",
+		"django.core.context_processors.i18n",
+		"django.core.context_processors.media",
+		"django.core.context_processors.static",
+		"django.core.context_processors.tz",
+		"django.contrib.messages.context_processors.messages",
+		'django.core.context_processors.request')
+
+	TEMPLATE_DIRS = (os.path.join(SITE_ROOT, 'templates'),
+					os.path.join(SITE_ROOT, 'SkeletalDisplay/templates'))
 
 	INSTALLED_APPS = [
 		...
