@@ -7,17 +7,16 @@ from django.utils.encoding import smart_str
 from datetime import datetime
 import settings
 
-import markdown2, base64, json
+import markdown2
 
 from django.db import models
 
 from django_tables2 import RequestConfig
 
-import SkeletalDisplay
+import HotDjango
 
 from django.contrib.auth import logout as auth_logout
 from django.http import HttpResponseRedirect
-import copy
 
 def index(request):
 	page_gen = PageGenerator(request)
@@ -42,7 +41,7 @@ def logout(request):
 class PageGenerator(object):
 	def __init__(self, request):
 		self._request = request
-		self._apps = SkeletalDisplay.get_display_apps()
+		self._apps = HotDjango.get_display_apps()
 		self._content = {'page_menu': ()}
 		if 'message' in self._request.session:
 			self._content['info'] = request.session.pop('info')
@@ -191,7 +190,7 @@ def base(request, title, content, template, apps=None, disp_model=None, top_acti
 	main_menu=[]
 	active = None
 	if disp_model is not None: active = disp_model.__name__
-	if apps is None: apps = SkeletalDisplay.get_display_apps()
+	if apps is None: apps = HotDjango.get_display_apps()
 	for app_name in apps:
 		for model_name in apps[app_name]:
 			model = apps[app_name][model_name]
