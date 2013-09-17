@@ -175,6 +175,34 @@ class PageGenerator(object):
 		else:
 			return '%d' % value
 	
+def base_context(request, title, apps=None, disp_model=None, top_active=None):
+	top_menu = []
+	
+	for item in settings.TOP_MENU:
+		menu_item = {'url': reverse(item['url']), 'name': item['name']}
+		if item['url'] == top_active:
+			menu_item['class'] = 'active'
+		top_menu.append(menu_item)
+	if request.user.is_staff:
+		top_menu.append({'url': reverse('admin:index'), 'name': 'Admin'})
+	else:
+		top_menu.append({'url': reverse('logout'), 'name': 'Logout'})
+	side_menu = []
+	active = None
+	if disp_model is not None: active = disp_model.__name__
+	if apps is None: apps = HotDjango.get_display_apps()
+	for app_name in apps:
+		for model_name in apps[app_name]:
+			model = apps[app_name][model_name]
+			if model.display:
+				cls = ''
+				if model_name == active: cls = 'open'
+				side_menu.append({'url': reverse('display_model', args=[app_name, model_name]), 
+								'name': get_plural_name(model), 'class': cls, 'index': model.index})
+	side_menu = sorted(side_menu, key=lambda d: d['index'])
+	site_title = settings.SITE_TITLE
+	return {'top_menu': top_menu, 'site_title': site_title, 'title': title, 'menu': side_menu}
+
 def base(request, title, content, template, apps=None, disp_model=None, top_active=None):
 	top_menu = []
 	
