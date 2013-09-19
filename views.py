@@ -66,7 +66,7 @@ class PageGenerator(object):
 	def display_model(self, app_name, model_name):
 		self._set_model(app_name, model_name)
 		links = [{'url': reverse('add_item', args=[app_name, model_name]), 'name': 'Add ' + self._single_t}]
-		table = self._disp_model.Table(self._disp_model.model.objects.all())
+		table = self._disp_model.DjangoTable(self._disp_model.model.objects.all())
 		RequestConfig(self._request).configure(table)
 		crums = self._set_crums(set_to = [{'url': reverse('display_index'), 'name': 'Model Display'},
 										{'url': reverse('display_model', args=(app_name, model_name)), 'name' : self._plural_t}])
@@ -134,7 +134,7 @@ class PageGenerator(object):
 				if 'table' in tab:
 					table_def = getattr(self._apps[self._disp_model.app_parent][tab['name']], tab['table'])
 				else:
-					table_def = self._apps[self._disp_model.app_parent][tab['name']].Table
+					table_def = self._apps[self._disp_model.app_parent][tab['name']].DjangoTable
 				this_table['renderable'] = table_def(popul)
 				RequestConfig(self._request).configure(this_table['renderable'])
 				generated_tables.append(this_table)
