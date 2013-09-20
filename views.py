@@ -20,6 +20,8 @@ from django.http import HttpResponseRedirect
 import SkeletalDisplay
 
 def index(request):
+	print 'loading index'
+	print request.user.is_authenticated()
 	page_gen = PageGenerator(request)
 	return page_gen.index()
 
@@ -57,12 +59,12 @@ class PageGenerator(object):
 		self._single_t = self._disp_model.model._meta.verbose_name.title()
 		
 	def index(self):
-		return base(self._request, settings.SITE_TITLE, self._content, 'index.html', self._apps)
+		return base(self._request, settings.SITE_TITLE, self._content, 'sk_index.html', self._apps)
 		
 	def display_index(self):
 		crums = self._set_crums(set_to = [{'url': reverse('display_index'), 'name': 'Model Display'}])
 		self._content['crums'] = crums
-		return base(self._request, settings.SITE_TITLE, self._content, 'display_index.html', apps=self._apps, top_active='display_index')
+		return base(self._request, settings.SITE_TITLE, self._content, 'sk_display_index.html', apps=self._apps, top_active='display_index')
 	
 	def display_model(self, app_name, model_name):
 		self._set_model(app_name, model_name)
@@ -74,7 +76,7 @@ class PageGenerator(object):
 										{'url': reverse('display_model', args=(app_name, model_name)), 'name' : self._plural_t}])
 		
 		self._content.update({'page_menu': links, 'table': table, 'crums': crums, 'model_title': self._plural_t})
-		return base(self._request, self._plural_t, self._content, 'model_display.html', self._apps, self._disp_model, 'display_index')
+		return base(self._request, self._plural_t, self._content, 'sk_model_display.html', self._apps, self._disp_model, 'display_index')
 		
 	def display_item(self, app_name, model_name, item_id):
 		self._set_model(app_name, model_name)
@@ -90,7 +92,7 @@ class PageGenerator(object):
 		crums = self._set_crums(add = [{'url': reverse('display_item', args=(app_name, model_name, int(item_id))), 'name': name}])
 		
 		self._content.update({'page_menu': links, 'status_groups': status_groups, 'crums': crums, 'tables_below': tbelow})
-		return base(self._request, self._single_t, self._content, 'item_display.html', self._apps, self._disp_model, 'display_index')
+		return base(self._request, self._single_t, self._content, 'sk_item_display.html', self._apps, self._disp_model, 'display_index')
 	
 	def _set_crums(self, set_to = None, add = None):
 		if set_to is not None:
@@ -176,19 +178,9 @@ class PageGenerator(object):
 			return '%0.2f' % value
 		else:
 			return '%d' % value
-	
-def base_context(request, title, apps=None, disp_model=None, top_active=None):
-	top_menu = []
-	
-	for item in settings.TOP_MENU:
-		menu_item = {'url': reverse(item['url']), 'name': item['name']}
-		if item['url'] == top_active:
-			menu_item['class'] = 'active'
-		top_menu.append(menu_item)
-	if request.user.is_staff:
-		top_menu.append({'url': reverse('admin:index'), 'name': 'Admin'})
-	else:
-		top_menu.append({'url': reverse('logout'), 'name': 'Logout'})
+		
+		
+def default_side_menu(disp_model=None, apps=None):
 	side_menu = []
 	active = None
 	if disp_model is not None: active = disp_model.__name__
@@ -202,8 +194,22 @@ def base_context(request, title, apps=None, disp_model=None, top_active=None):
 				side_menu.append({'url': reverse('display_model', args=[app_name, model_name]), 
 								'name': get_plural_name(model), 'class': cls, 'index': model.index})
 	side_menu = sorted(side_menu, key=lambda d: d['index'])
+	return side_menu
+	
+def base_context(request, side_menu, top_active=None):
+	top_menu = []
+	
+	for item in settings.TOP_MENU:
+		menu_item = {'url': reverse(item['url']), 'name': item['name']}
+		if item['url'] == top_active:
+			menu_item['class'] = 'active'
+		top_menu.append(menu_item)
+	if request.user.is_staff:
+		top_menu.append({'url': reverse('admin:index'), 'name': 'Admin'})
+	else:
+		top_menu.append({'url': reverse('logout'), 'name': 'Logout'})
 	site_title = settings.SITE_TITLE
-	return {'top_menu': top_menu, 'site_title': site_title, 'title': title, 'menu': side_menu}
+	return {'top_menu': top_menu, 'site_title': site_title, 'menu': side_menu}
 
 def base(request, title, content, template, apps=None, disp_model=None, top_active=None):
 	top_menu = []

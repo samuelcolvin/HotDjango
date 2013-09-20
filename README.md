@@ -30,9 +30,10 @@ Edit settings.py
 
 	INSTALLED_APPS = [
 		...
-	    'SkeletalDisplay',
 		'django_tables2',
 		'bootstrap3',
+		'HotDjango'
+	    'SkeletalDisplay',
 		...
 	]
 	
@@ -48,7 +49,7 @@ Edit settings.py
 	
 	DISPLAY_APPS = [<<apps to display>>]
 	SITE_TITLE = '<<site name>>'
-	EXTRA_TOP_RIGHT_MENU = [{'url': 'name to reverse', 'name': 'Name for Link'}]
+	TOP_MENU = [{'url': 'name to reverse', 'name': 'Name for Link'}]
 	LOGIN_REDIRECT_URL = '/'
 	INTERNAL_IPS = ('127.0.0.1',)
 

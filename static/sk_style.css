@@ -56,3 +56,12 @@ tbody tr:hover {
 .field-display{
 	min-height: 120px;
 }
+
+.nav .open > a, .nav .open > a:hover, .nav .open > a:focus {
+	background-color: #e0e0e0;
+}
+
+.centered{
+    float: none;
+    margin: 0 auto;
+}

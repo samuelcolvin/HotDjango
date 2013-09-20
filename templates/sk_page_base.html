@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "sk_base.html" %}
 
 {% load staticfiles %}
 {% block extra_js %}
@@ -58,9 +58,9 @@
 				{{message|safe}}
 			</div>
 		{% endif %}
+		<h4>{{title}}</h4>
 		{% block maincol_content %}{% endblock %}
 	</div> <!-- main col-->
-	
 	{% block below_maincol %}{% endblock %}
   </div> <!-- main row-->
 </div>
