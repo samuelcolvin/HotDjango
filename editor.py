@@ -1,7 +1,22 @@
 from django.forms.models import modelform_factory
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
-from SkeletalDisplay.views import base
+from SkeletalDisplay.views import base, base_context
+import django.views.generic as generic
+
+class HotEdit(generic.TemplateView):
+    template_name = 'hot_edit.html'
+
+    def get_context_data(self, **kw):
+        context = super(HotEdit, self).get_context_data(**kw)
+        context['app_name'] = kw['app']
+        context['model_name'] = kw['model']
+        context.update(base_context(self.request, kw['model']))
+        return context
+
+def mass_edit(request, app_name, model_name):
+    model_editor = ModelEditor(request, app_name, model_name)
+    return model_editor.add_item()
 
 def add_item(request, app_name, model_name):
     model_editor = ModelEditor(request, app_name, model_name)

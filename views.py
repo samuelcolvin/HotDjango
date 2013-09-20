@@ -17,6 +17,7 @@ import HotDjango
 
 from django.contrib.auth import logout as auth_logout
 from django.http import HttpResponseRedirect
+import SkeletalDisplay
 
 def index(request):
 	page_gen = PageGenerator(request)
@@ -41,7 +42,7 @@ def logout(request):
 class PageGenerator(object):
 	def __init__(self, request):
 		self._request = request
-		self._apps = HotDjango.get_display_apps()
+		self._apps = SkeletalDisplay.get_display_apps()
 		self._content = {'page_menu': ()}
 		if 'message' in self._request.session:
 			self._content['info'] = request.session.pop('info')
@@ -65,7 +66,8 @@ class PageGenerator(object):
 	
 	def display_model(self, app_name, model_name):
 		self._set_model(app_name, model_name)
-		links = [{'url': reverse('add_item', args=[app_name, model_name]), 'name': 'Add ' + self._single_t}]
+		links = [{'url': reverse('add_item', args=[app_name, model_name]), 'name': 'Add ' + self._single_t},
+				{'url': reverse('hot_edit', kwargs={'app': app_name, 'model': model_name}), 'name': 'Mass Edit'}]
 		table = self._disp_model.DjangoTable(self._disp_model.model.objects.all())
 		RequestConfig(self._request).configure(table)
 		crums = self._set_crums(set_to = [{'url': reverse('display_index'), 'name': 'Model Display'},
@@ -190,7 +192,7 @@ def base_context(request, title, apps=None, disp_model=None, top_active=None):
 	side_menu = []
 	active = None
 	if disp_model is not None: active = disp_model.__name__
-	if apps is None: apps = HotDjango.get_display_apps()
+	if apps is None: apps = SkeletalDisplay.get_display_apps()
 	for app_name in apps:
 		for model_name in apps[app_name]:
 			model = apps[app_name][model_name]
@@ -218,7 +220,7 @@ def base(request, title, content, template, apps=None, disp_model=None, top_acti
 	main_menu=[]
 	active = None
 	if disp_model is not None: active = disp_model.__name__
-	if apps is None: apps = HotDjango.get_display_apps()
+	if apps is None: apps = SkeletalDisplay.get_display_apps()
 	for app_name in apps:
 		for model_name in apps[app_name]:
 			model = apps[app_name][model_name]
@@ -231,6 +233,30 @@ def base(request, title, content, template, apps=None, disp_model=None, top_acti
 	site_title = settings.SITE_TITLE
 	content.update({'top_menu': top_menu, 'site_title': site_title, 'title': title, 'menu': main_menu})
 	return render_to_response(template, content, context_instance=RequestContext(request))
+
+# hot version:
+# def base_context(request, top_active=None):
+#     
+#     apps = HotDjango.get_rest_apps()
+#     menu = []
+#     for app_name, app in apps.iteritems():
+#         for model_name in app.keys():
+#             menu.append({'name': '%s: %s' % (app_name, model_name),
+#                          'url': reverse('hot-table', kwargs={'app': app_name, 'model': model_name})})
+#     top_menu = []
+#     for item in settings.TOP_MENU:
+#         menu_item = {'url': reverse(item['url']), 'name': item['name']}
+#         if item['url'] == top_active:
+#             menu_item['class'] = 'active'
+#         top_menu.append(menu_item)
+#     if request.user.is_staff:
+#         top_menu.append({'url': reverse('admin:index'), 'name': 'Admin'})
+#     else:
+#         top_menu.append({'url': reverse('logout'), 'name': 'Logout'})
+#     site_title = settings.SITE_TITLE
+#     context = {'top_menu': top_menu, 'site_title': site_title}
+#     context.update(csrf(request))
+#     return context
 
 def get_plural_name(dm):
 	return dm.model._meta.verbose_name_plural
