@@ -7,7 +7,7 @@
 
 {% block content %}
 {% if request.user.is_authenticated %}    
-<div class="navbar navbar-inverse navbar-fixed-top">
+<div class="navbar navbar-inverse navbar-fixed-top hidden-print">
   <div class="container">
     <div class="navbar-header">
       <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -39,11 +39,17 @@
 				{% endfor %}
 			</ol>
 		{% endif %}
-		{% if info %}<div class="alert alert-info">{{info|safe}}</div>{% endif %}
-		{% if success %}<div class="alert alert-success">{{success|safe}}</div>{% endif %}
-		{% if error %}<div class="alert alert-danger">{{error|safe}}</div>{% endif %}
+		{% if info %}<div class="alert alert-info">
+			{% for info_i in info %} <p>{{info_i}}</p> {% endfor %}
+		</div>{% endif %}
+		{% if success %}<div class="alert alert-success">
+			{% for s in success %} <p>{{s}}</p> {% endfor %}
+		</div>{% endif %}
+		{% if errors %}<div class="alert alert-danger">
+			{% for error in errors %} <p>{{error}}</p> {% endfor %}
+		</div>{% endif %}
 		{% if page_menu %}
-		<div id="page-menu">
+		<div id="page-menu" class="hidden-print row">
 			<p>
 				{% for item in page_menu %}
 					{% if item.url %}<a href="{{item.url}}" class="btn btn-default">{{item.name}}</a>
@@ -53,12 +59,9 @@
 			</p>
 		</div>
 		{% endif %}
-		{% if message %}
-			<div id="message">
-				{{message|safe}}
-			</div>
-		{% endif %}
-		<h4>{{title}}</h4>
+		<div class="row">
+			<h4>{{title}}</h4>
+		</div>
 		{% block maincol_content %}{% endblock %}
 	</div> <!-- main col-->
 	{% block below_maincol %}{% endblock %}

@@ -4,12 +4,12 @@
 
 {% block top_of_page %}
 	<p class="pull-right visible-xs">
-		<button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas">Toggle nav</button>
+		<button type="button" class="btn btn-primary btn-xs hidden-print" data-toggle="offcanvas">Toggle nav</button>
 	</p>      
 {% endblock %}
 	
 {% block below_maincol %}
-	<div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
+	<div class="col-xs-6 col-sm-3 sidebar-offcanvas hidden-print" id="sidebar" role="navigation">
 	  <div class="well sidebar-nav">
 	    <ul class="nav">
 			{% for item in menu %}

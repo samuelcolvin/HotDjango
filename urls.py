@@ -2,7 +2,7 @@ from django.conf.urls import patterns, include, url
 import SkeletalDisplay.editor as editor
 
 urlpatterns = patterns('',
-    url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}, name='login'),
+    url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'sk_login.html'}, name='login'),
 )
 
 urlpatterns += patterns('SkeletalDisplay.views',
