@@ -3,6 +3,7 @@ from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
 from SkeletalDisplay.views import base, base_context, default_side_menu
 import django.views.generic as generic
+import HotDjango
 
 class HotEdit(generic.TemplateView):
     template_name = 'sk_hot_edit.html'
@@ -11,7 +12,9 @@ class HotEdit(generic.TemplateView):
         context = super(HotEdit, self).get_context_data(**kw)
         context['app_name'] = kw['app']
         context['model_name'] = kw['model']
-        context.update(base_context(self.request, 'Editor', default_side_menu(kw['model'])))
+        apps = HotDjango.get_all_apps()
+        model = apps[kw['app']][kw['model']]
+        context.update(base_context(self.request, 'Editor', default_side_menu(model)))
         return context
 
 def mass_edit(request, app_name, model_name):
@@ -82,7 +85,8 @@ class ModelEditor:
         return base(self._request, self._title, self._content, 'sk_add_edit.html')
 
     def _get_form_model(self):
-        app_models = __import__(self._app_name + '.models')
+        m=self._app_name.replace('__', '.')
+        app_models = __import__(m, globals(), locals(), ['models'], -1)
         self._model = getattr(app_models.models, self._model_name)
         self._form_metaclass = modelform_factory(self._model)
     

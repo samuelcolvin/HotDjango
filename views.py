@@ -1,7 +1,7 @@
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 
-from django.core.urlresolvers import reverse
+import django.core.urlresolvers
 from django.utils.encoding import smart_str
 
 from datetime import datetime
@@ -18,6 +18,15 @@ import HotDjango
 from django.contrib.auth import logout as auth_logout
 from django.http import HttpResponseRedirect
 import SkeletalDisplay
+
+def reverse(name, args=[], kwargs={}):
+	for i, arg in enumerate(args):
+		if isinstance(arg, str):
+			args[i] = arg.replace('.','__')
+	for key, value in kwargs.items():
+		if isinstance(value, str):
+			kwargs[key]=value.replace('.','__')
+	return django.core.urlresolvers.reverse(name, args=args, kwargs=kwargs)
 
 def index(request):
 	print 'loading index'

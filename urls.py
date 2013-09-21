@@ -8,7 +8,7 @@ urlpatterns = patterns('',
 urlpatterns += patterns('SkeletalDisplay.views',
 #     url(r'^$', 'index', name='index'),
     url(r'^disp/$', 'display_index', name='display_index'),
-    url(r'^disp/([\w]+)/(\w+)/(\d+)$', 'display_item', name='display_item'),
+    url(r'^disp/(\w+)/(\w+)/(\d+)$', 'display_item', name='display_item'),
     url(r'^disp/(\w+)/(\w+)$', 'display_model', name='display_model'),
     url(r'^logout/$', 'logout', name='logout'),
 )
