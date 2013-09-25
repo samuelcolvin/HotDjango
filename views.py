@@ -1,19 +1,14 @@
 from django.template import RequestContext
 from django.shortcuts import render_to_response
-
+import django.views.generic as generic
 import django.core.urlresolvers
 from django.utils.encoding import smart_str
 
 from datetime import datetime
 import settings
-
 import markdown2
-
 from django.db import models
-
 from django_tables2 import RequestConfig
-
-import HotDjango
 
 from django.contrib.auth import logout as auth_logout
 from django.http import HttpResponseRedirect
@@ -28,80 +23,45 @@ def reverse(name, args=[], kwargs={}):
 			kwargs[key]=value.replace('.','__')
 	return django.core.urlresolvers.reverse(name, args=args, kwargs=kwargs)
 
-def index(request):
-	print 'loading index'
-	print request.user.is_authenticated()
-	page_gen = PageGenerator(request)
-	return page_gen.index()
-
-def display_index(request):
-	page_gen = PageGenerator(request)
-	return page_gen.display_index()
-
-def display_model(request, app_name, model_name):
-	page_gen = PageGenerator(request)
-	return page_gen.display_model(app_name, model_name)
-	
-def display_item(request, app_name, model_name, item_id):
-	page_gen = PageGenerator(request)
-	return page_gen.display_item(app_name, model_name, item_id)
-
-def logout(request):
-	auth_logout(request)
-	return HttpResponseRedirect(reverse('index'))
-
-class PageGenerator(object):
-	def __init__(self, request):
+class TemplateBase(generic.TemplateView):
+	def get(self, request, *args, **kw):
 		self._request = request
+		context = self.get_context_data(**kw)
+		return self.render_to_response(context)
+	
+	def setup_context(self, **kw):
 		self._apps = SkeletalDisplay.get_display_apps()
-		self._content = {'page_menu': ()}
 		if 'message' in self._request.session:
-			self._content['info'] = request.session.pop('info')
+			self._content['info'] = self._request.session.pop('info')
 		if 'success' in self._request.session:
-			self._content['success'] = request.session.pop('success')
+			self._content['success'] = self._request.session.pop('success')
 		if 'error' in self._request.session:
-			self._content['error'] = request.session.pop('error')
+			self._content['error'] = self._request.session.pop('error')
+		self._disp_model = None
+		self._top_active = None
+			
+		self._app_name = kw.get('app', None)
+		self._model_name = kw.get('model', None)
+		if None not in (self._app_name, self._model_name):
+			self._disp_model = self._find_model(self._app_name, self._model_name)
+			self._plural_t = get_plural_name(self._disp_model)
+			self._single_t = self._disp_model.model._meta.verbose_name.title()
+		
+		self._context = super(TemplateBase, self).get_context_data(**kw)
+		
+		self._context['base_template'] = 'sk_page_base.html'
+		if hasattr(settings, 'PAGE_BASE'):
+			self._context['base_template'] = settings.PAGE_BASE
 	
-	def _set_model(self, app_name, model_name):
-		self._disp_model = self._find_model(app_name, model_name)
-		self._plural_t = get_plural_name(self._disp_model)
-		self._single_t = self._disp_model.model._meta.verbose_name.title()
-		
-	def index(self):
-		return base(self._request, settings.SITE_TITLE, self._content, 'sk_index.html', self._apps)
-		
-	def display_index(self):
-		crums = self._set_crums(set_to = [{'url': reverse('display_index'), 'name': 'Model Display'}])
-		self._content['crums'] = crums
-		return base(self._request, settings.SITE_TITLE, self._content, 'sk_display_index.html', apps=self._apps, top_active='display_index')
+	def generate_base(self, generate_side_menu=True):
+		side_menu = default_side_menu(disp_model=self._disp_model, apps=self._apps)
+		self._context.update(base_context(self.request, side_menu, top_active=self._top_active))
 	
-	def display_model(self, app_name, model_name):
-		self._set_model(app_name, model_name)
-		links = [{'url': reverse('add_item', args=[app_name, model_name]), 'name': 'Add ' + self._single_t},
-				{'url': reverse('hot_edit', kwargs={'app': app_name, 'model': model_name}), 'name': 'Mass Edit'}]
-		table = self._disp_model.DjangoTable(self._disp_model.model.objects.all())
-		RequestConfig(self._request).configure(table)
-		crums = self._set_crums(set_to = [{'url': reverse('display_index'), 'name': 'Model Display'},
-										{'url': reverse('display_model', args=(app_name, model_name)), 'name' : self._plural_t}])
-		
-		self._content.update({'page_menu': links, 'table': table, 'crums': crums, 'model_title': self._plural_t})
-		return base(self._request, self._plural_t, self._content, 'sk_model_display.html', self._apps, self._disp_model, 'display_index')
-		
-	def display_item(self, app_name, model_name, item_id):
-		self._set_model(app_name, model_name)
-		item = self._disp_model.model.objects.get(id = int(item_id))
-		links = [{'url': reverse('add_item', args=[app_name, model_name]), 'name': 'Add ' + self._single_t},
-				{'url': reverse('edit_item', args=[app_name, model_name, item.id]), 'name': 'Edit Item'},
-				{'url': reverse('delete_item', args=[app_name, model_name, item.id]), 'name': 'Delete Item'}]
-		status_groups=[]
-		title = '%s: %s' %  (self._single_t, str(item))
-		status_groups.append({'title': title, 'fields': self._populate_fields(item, self._disp_model)})
-		tbelow = self._populate_tables(item, self._disp_model)
-		name = str(self._disp_model.model.objects.get(id=int(item_id)))
-		crums = self._set_crums(add = [{'url': reverse('display_item', args=(app_name, model_name, int(item_id))), 'name': name}])
-		
-		self._content.update({'page_menu': links, 'status_groups': status_groups, 'crums': crums, 'tables_below': tbelow})
-		return base(self._request, self._single_t, self._content, 'sk_item_display.html', self._apps, self._disp_model, 'display_index')
+	def _find_model(self, app_name, model_name):
+		try:
+			return self._apps[app_name][model_name]
+		except:
+			raise Exception('ERROR: %s.%s not found' % (app_name, model_name))
 	
 	def _set_crums(self, set_to = None, add = None):
 		if set_to is not None:
@@ -110,18 +70,71 @@ class PageGenerator(object):
 			if add[0] != self._request.session['crums'][-1]:
 				self._request.session['crums'] += add
 		return self._request.session['crums']
+
+class Index(TemplateBase):
+	template_name = 'sk_index.html'
 	
-	def _cap(self, string):
-		words = string.split(' ')
-		for word in words:
-			word = word.capitalize()
+	def get_context_data(self, **kw):
+		self.setup_context(**kw)
+		self._context['title'] = settings.SITE_TITLE
+		self.generate_base()
+		return self._context
+
+class DisplayIndex(TemplateBase):
+	template_name = 'sk_display_index.html'
 	
-	def _find_model(self, app_name, model_name):
-		try:
-			return self._apps[app_name][model_name]
-		except:
-			raise Exception('ERROR: %s.%s not found' % (app_name, model_name))
+	def get_context_data(self, **kw):
+		self.setup_context(**kw)
+		self._context['title'] = settings.SITE_TITLE
+		self._top_active = 'display_index'
+		self.generate_base()
+		return self._context
+
+class DisplayModel(TemplateBase):
+	template_name = 'sk_model_display.html'
+	
+	def get_context_data(self, **kw):
+		self.setup_context(**kw)
+		links = [{'url': reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t},
+				{'url': reverse('hot_edit', kwargs={'app': self._app_name, 'model': self._model_name}), 'name': 'Mass Edit'}]
+		crums = self._set_crums(set_to = [{'url': reverse('display_index'), 'name': 'Model Display'},
+										{'url': reverse('display_model', args=(self._app_name, self._model_name)), 'name' : self._plural_t}])
+		table = self._disp_model.DjangoTable(self._disp_model.model.objects.all())
+		RequestConfig(self._request).configure(table)
+		self._context.update({'page_menu': links, 'crums': crums, 'table': table, 'model_title': self._plural_t})
 		
+		self._context['title'] = self._plural_t
+		self._top_active = 'display_index'
+		self.generate_base()
+		return self._context
+
+class DisplayItem(TemplateBase):
+	template_name = 'sk_item_display.html'
+	
+	def get_context_data(self, **kw):
+		self.setup_context(**kw)
+		self._item_id = kw.get('id', None)
+		self._item = self._disp_model.model.objects.get(id = int(self._item_id))
+		
+		
+		links = [{'url': reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t},
+				{'url': reverse('edit_item', args=[self._app_name, self._model_name, self._item.id]), 'name': 'Edit Item'},
+				{'url': reverse('delete_item', args=[self._app_name, self._model_name, self._item.id]), 'name': 'Delete Item'}]
+		
+		status_groups=[]
+		title = '%s: %s' %  (self._single_t, str(self._item))
+		status_groups.append({'title': title, 'fields': self._populate_fields(self._item, self._disp_model)})
+		tbelow = self._populate_tables(self._item, self._disp_model)
+		name = str(self._disp_model.model.objects.get(id=int(self._item_id)))
+		crums = self._set_crums(add = [{'url': reverse('display_item', args=(self._app_name, self._model_name, int(self._item_id))), 'name': name}])
+		
+		self._context.update({'page_menu': links, 'status_groups': status_groups, 'crums': crums, 'tables_below': tbelow})
+
+		self._context['title'] = self._single_t
+		self._top_active = 'display_index'
+		self.generate_base()
+		return self._context
+	
 	def _populate_fields(self, item, dm, exceptions=[]):
 		item_fields=[]
 		for field in dm.model._meta.fields:
@@ -187,7 +200,11 @@ class PageGenerator(object):
 			return '%0.2f' % value
 		else:
 			return '%d' % value
-		
+
+def logout(request):
+	auth_logout(request)
+	return HttpResponseRedirect(reverse('index'))
+
 		
 def default_side_menu(disp_model=None, apps=None):
 	side_menu = []
@@ -222,7 +239,6 @@ def base_context(request, side_menu, top_active=None):
 
 def base(request, title, content, template, apps=None, disp_model=None, top_active=None):
 	top_menu = []
-	
 	for item in settings.TOP_MENU:
 		menu_item = {'url': reverse(item['url']), 'name': item['name']}
 		if item['url'] == top_active:
@@ -249,29 +265,5 @@ def base(request, title, content, template, apps=None, disp_model=None, top_acti
 	content.update({'top_menu': top_menu, 'site_title': site_title, 'title': title, 'menu': main_menu})
 	return render_to_response(template, content, context_instance=RequestContext(request))
 
-# hot version:
-# def base_context(request, top_active=None):
-#     
-#     apps = HotDjango.get_rest_apps()
-#     menu = []
-#     for app_name, app in apps.iteritems():
-#         for model_name in app.keys():
-#             menu.append({'name': '%s: %s' % (app_name, model_name),
-#                          'url': reverse('hot-table', kwargs={'app': app_name, 'model': model_name})})
-#     top_menu = []
-#     for item in settings.TOP_MENU:
-#         menu_item = {'url': reverse(item['url']), 'name': item['name']}
-#         if item['url'] == top_active:
-#             menu_item['class'] = 'active'
-#         top_menu.append(menu_item)
-#     if request.user.is_staff:
-#         top_menu.append({'url': reverse('admin:index'), 'name': 'Admin'})
-#     else:
-#         top_menu.append({'url': reverse('logout'), 'name': 'Logout'})
-#     site_title = settings.SITE_TITLE
-#     context = {'top_menu': top_menu, 'site_title': site_title}
-#     context.update(csrf(request))
-#     return context
-
 def get_plural_name(dm):
-	return dm.model._meta.verbose_name_plural
+	return  unicode(dm.model._meta.verbose_name_plural)

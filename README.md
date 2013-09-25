@@ -64,13 +64,16 @@ edit your projects urls.py to look something like this:
 	from django.contrib import admin
 	admin.autodiscover()
 
-	urlpatterns = SkeletalDisplay.urls.urlpatterns
-
-	urlpatterns += patterns('',
-		url(r'^admin/', include(admin.site.urls), name='admin'),)
-
-	urlpatterns += patterns('',
-		(r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
+	urlpatterns = patterns('',
+	    #other displays
+	    url(r'^hot/', include('HotDjango.urls')),
+	    url(r'^', include('SkeletalDisplay.urls')),
+	
+	    # Uncomment the admin/doc line below to enable admin documentation:
+	    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+	
+	    # Uncomment the next line to enable the admin:
+	    url(r'^admin/', include(admin.site.urls)),
 	)
 
 lastly you need to add a display.py file to each app named in DISPLAY_APPS (see above) to define how the app is displayed.

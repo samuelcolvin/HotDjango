@@ -1,15 +1,16 @@
 from django.conf.urls import patterns, include, url
 import SkeletalDisplay.editor as editor
+import SkeletalDisplay.views as views
 
 urlpatterns = patterns('',
     url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'sk_login.html'}, name='login'),
 )
 
 urlpatterns += patterns('SkeletalDisplay.views',
-#     url(r'^$', 'index', name='index'),
-    url(r'^disp/$', 'display_index', name='display_index'),
-    url(r'^disp/(\w+)/(\w+)/(\d+)$', 'display_item', name='display_item'),
-    url(r'^disp/(\w+)/(\w+)$', 'display_model', name='display_model'),
+    url(r'^$', views.Index.as_view(), name='index'),
+    url(r'^disp/$', views.DisplayIndex.as_view(), name='display_index'),
+    url(r'^disp/(?P<app>\w+)/(?P<model>\w+)$', views.DisplayModel.as_view(), name='display_model'),
+    url(r'^disp/(?P<app>\w+)/(?P<model>\w+)/(?P<id>\d+)$', views.DisplayItem.as_view(), name='display_item'),
     url(r'^logout/$', 'logout', name='logout'),
 )
 

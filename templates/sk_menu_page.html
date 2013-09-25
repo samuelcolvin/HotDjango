@@ -1,6 +1,12 @@
-{% extends "sk_page_base.html" %}
+{% extends base_template %}
 
 {% block extra_maincol_classes %}col-sm-9{% endblock %}
+
+
+{% block extra_js %}
+{% load staticfiles %}
+<script src="{% static "js/offcanvas.js" %}"></script>
+{% endblock %}
 
 {% block top_of_page %}
 	<p class="pull-right visible-xs">

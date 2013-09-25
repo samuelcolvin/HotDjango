@@ -1,10 +1,5 @@
 {% extends "sk_base.html" %}
 
-{% load staticfiles %}
-{% block extra_js %}
-<script src="{% static "js/offcanvas.js" %}"></script>
-{% endblock %}
-
 {% block content %}
 {% if request.user.is_authenticated %}    
 <div class="navbar navbar-inverse navbar-fixed-top hidden-print">
