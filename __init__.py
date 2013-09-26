@@ -1,15 +1,19 @@
 import settings
 import inspect, json
 import HotDjango
+import django_tables2 as tables
+from django_tables2.utils import A
 
 
 class _MetaModelDisplay(HotDjango._MetaBaseDisplayModel):
     def __init__(cls, *args, **kw):
         HotDjango._MetaBaseDisplayModel.__init__(cls, *args, **kw)
+        if cls.__name__ == 'ModelDisplay':
+            return
+        assert hasattr(cls, 'model'), '%s is missing a model, all display models must have a model attribute.' % cls.__name__
+        cls.model_name = cls.model.__name__
         if not (hasattr(cls,'HotTable') or hasattr(cls,'DjangoTable')):
             return
-        assert hasattr(cls, 'model'), '%s is missing a model, all display models must have a model attribute at %s' % (cls.__name__, cls.__file__)
-        cls.model_name = cls.model.__name__
         if hasattr(cls, 'DjangoTable'):
             if hasattr(cls.DjangoTable, 'Meta'):
                 cls.DjangoTable.Meta.model = cls.model
@@ -18,25 +22,23 @@ class _MetaModelDisplay(HotDjango._MetaBaseDisplayModel):
 
 class ModelDisplay(HotDjango.BaseDisplayModel):
     __metaclass__ = _MetaModelDisplay
-    extra_funcs = []
-    tables = []
+    extra_funcs = {}
+    extra_fields = {}
+    extra_models = {}
+    attached_tables = []
+    exclude = []
     display = True
+    editable = True
+    form = None
+    formset_model = None
     
 class ModelDisplayMeta:
     orderable = False
     attrs = {'class': 'table table-bordered table-condensed'}
     per_page = 100
 
-
 def get_display_apps():
-    all_apps = HotDjango.get_all_apps()
-    for app in all_apps.values():
-        for model_name in app.keys():
-            if not hasattr(app[model_name], 'DjangoTable'):
-                del app[model_name]
-        if len(app) == 0:
-            del app
-    return all_apps
+    return HotDjango.get_all_apps()
 
 class _AppEncode(json.JSONEncoder):
     def default(self, obj):

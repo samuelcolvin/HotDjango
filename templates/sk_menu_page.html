@@ -1,21 +1,9 @@
 {% extends base_template %}
 
-{% block extra_maincol_classes %}col-sm-9{% endblock %}
-
-
-{% block extra_js %}
-{% load staticfiles %}
-<script src="{% static "js/offcanvas.js" %}"></script>
-{% endblock %}
-
-{% block top_of_page %}
-	<p class="pull-right visible-xs">
-		<button type="button" class="btn btn-primary btn-xs hidden-print" data-toggle="offcanvas">Toggle nav</button>
-	</p>      
-{% endblock %}
+{% block extra_maincol_classes %}col-md-9 col-md-pull-3{% endblock %}
 	
-{% block below_maincol %}
-	<div class="col-xs-6 col-sm-3 sidebar-offcanvas hidden-print" id="sidebar" role="navigation">
+{% block sidebar %}
+	<div class="col-md-3 col-md-push-9 hidden-print" id="sidebar" role="navigation">
 	  <div class="well sidebar-nav">
 	    <ul class="nav">
 			{% for item in menu %}

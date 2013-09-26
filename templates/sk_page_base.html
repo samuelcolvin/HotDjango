@@ -1,7 +1,6 @@
 {% extends "sk_base.html" %}
 
-{% block content %}
-{% if request.user.is_authenticated %}    
+{% block content %}   
 <div class="navbar navbar-inverse navbar-fixed-top hidden-print">
   <div class="container">
     <div class="navbar-header">
@@ -20,8 +19,8 @@
   </div>
 </div>
 <div class="container main-container">
-  <div class="row row-offcanvas row-offcanvas-right">
-    <div class="col-xs-12 {% block extra_maincol_classes %}{% endblock %}">
+	{% block sidebar %}{% endblock %}
+    <div class="{% block extra_maincol_classes %}{% endblock %}">
       {% block top_of_page %}{% endblock %}
 		{% if crums %}
 			<ol class="breadcrumb">
@@ -44,7 +43,7 @@
 			{% for error in errors %} <p>{{error}}</p> {% endfor %}
 		</div>{% endif %}
 		{% if page_menu %}
-		<div id="page-menu" class="hidden-print row">
+		<div id="page-menu" class="hidden-print">
 			<p>
 				{% for item in page_menu %}
 					{% if item.url %}<a href="{{item.url}}" class="btn btn-default">{{item.name}}</a>
@@ -54,15 +53,10 @@
 			</p>
 		</div>
 		{% endif %}
-		<div class="row">
+		<div>
 			<h4>{{title}}</h4>
 		</div>
 		{% block maincol_content %}{% endblock %}
 	</div> <!-- main col-->
-	{% block below_maincol %}{% endblock %}
-  </div> <!-- main row-->
 </div>
-{% else %}
-		<meta http-equiv="REFRESH" content="0;url={% url "login" %}">
-{% endif %}
 {% endblock content %}

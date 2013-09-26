@@ -1,94 +1,101 @@
 from django.forms.models import modelform_factory
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
-from SkeletalDisplay.views import base, base_context, default_side_menu
-import django.views.generic as generic
-import HotDjango
+import SkeletalDisplay.views_base as viewb
+import django.views.generic.edit as generic_editor
+import Orders.models as m
+import django.forms.models as form_models
+import settings
+import SkeletalDisplay
 
-class HotEdit(generic.TemplateView):
+class HotEdit(viewb.TemplateBase):
     template_name = 'sk_hot_edit.html'
 
     def get_context_data(self, **kw):
-        context = super(HotEdit, self).get_context_data(**kw)
-        context['app_name'] = kw['app']
-        context['model_name'] = kw['model']
-        apps = HotDjango.get_all_apps()
-        model = apps[kw['app']][kw['model']]
-        context.update(base_context(self.request, 'Editor', default_side_menu(model)))
-        return context
+        self.setup_context(**kw)
+        self._context['title'] = 'Mass Editor'
+        self._top_active = 'display_index'
+        self._context['app_name'] = self._app_name
+        self._context['model_name'] = self._model_name
+        return self._context
 
-def mass_edit(request, app_name, model_name):
-    model_editor = ModelEditor(request, app_name, model_name)
-    return model_editor.add_item()
-
-def add_item(request, app_name, model_name):
-    model_editor = ModelEditor(request, app_name, model_name)
-    return model_editor.add_item()
-
-def edit_item(request, app_name, model_name, item_id):
-    model_editor = ModelEditor(request, app_name, model_name)
-    return model_editor.edit_item(item_id)
-
-def delete_item(request, app_name, model_name, item_id):
-    model_editor = ModelEditor(request, app_name, model_name)
-    return model_editor.delete_item(item_id)
-
-class ModelEditor:
-    def __init__(self, request, app_name, model_name):
-        self._request = request
-        self._app_name = app_name
-        self._model_name = model_name
-        self._get_form_model()
-        self._content = {}
-        self._content['success'] = ''
-            
-    def add_item(self):
-        self._title = 'Add %s' % self._model.__name__
-        if self._request.method == 'POST':
-            self._main_form = self._form_metaclass(self._request.POST)
-            return self._save()
+class AddEditItem(generic_editor.TemplateResponseMixin, generic_editor.ModelFormMixin, generic_editor.ProcessFormView, viewb.ViewBase): 
+    template_name = 'sk_add_edit.html'
+    
+    def setup_context(self, **kw):
+        super(AddEditItem, self).setup_context(**kw)
+        if self._disp_model.form is not None:
+            self.form_class = self._disp_model.form
         else:
-            self._main_form = self._form_metaclass()
-            return self._return_form()
+            self.form_class = form_models.modelform_factory(self._disp_model.model)
+        self.object = None
+        if self._item_id is not None:
+            self.object = self._item
+    
+    def get(self, request, *args, **kw):
+        self.setup_context(**kw)
+        return super(AddEditItem, self).get(request, *args, **kw)
+    
+    def post(self, request, *args, **kw):
+        self.setup_context(**kw)
+        return super(AddEditItem, self).post(request, *args, **kw)
+    
+    def form_valid(self, form):
+        context = self.get_context_data()
+        if self._disp_model.formset_model is not None:
+            formset = context['formset']
+            if formset.is_valid():
+                self.object = form.save(self.request)
+                formset.instance = self.object
+                formset.save()
+            else:
+                self._add_line('Form not Valid')
+                return self.render_to_response(self.get_context_data(form=form))
+        else:
+            form.save(self.request)
+        self._add_line('%s saved' % self._disp_model.model_name)
+        if self._item_id is not None:
+            return redirect(reverse('display_item', args=[self._app_name, self._model_name, self._item_id]))
+        else:
+            return redirect(reverse('display_model', args=[self._app_name, self._model_name]))
+
+    def form_invalid(self, form):
+        self._add_line('Form not Valid')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def get_context_data(self, **kw):
+        self._context.update(super(AddEditItem, self).get_context_data(**kw))
+        self._context['title'] = '%s %s' % (self.action, self._disp_model.model_name)
         
-    def edit_item(self, item_id):
-        self._title = 'Edit %s' % self._model.__name__
-        item = self._model.objects.get(id=int(item_id))
-        if self._request.method == 'POST':
-            self._main_form = self._form_metaclass(self._request.POST, instance=item)
-            return self._save()
-        else:
-            self._main_form = self._form_metaclass(instance=item)
-            return self._return_form()
-    
-    def delete_item(self, item_id):
-        item = self._model.objects.get(id=int(item_id))
-        item.delete()
-        self._add_line('%s: %s deleted' % (self._model.__name__, item))
-        return redirect(reverse('display_model', args=[self._app_name, self._model_name]))
-    
-    def _save(self): 
-        item = self._main_form.save(commit=False)
-        if self._main_form.is_valid():
-            item.save()
-            self._add_line('Model saved')
-            self._request.session['success'] = self._content['success']
-            return redirect(reverse('display_item', args=[self._app_name, self._model_name, item.id])) 
-        else:
-            self._add_line('Form not valid')
-            if not self._trace_form.is_valid(): self._add_line('Trace form not valid')
-            if not self._ss_formset.is_valid(): self._add_line('Specific source form not valid') 
-            return self._return_form()
-    
-    def _return_form(self):
-        self._content['main_form'] = self._main_form
-        return base(self._request, self._title, self._content, 'sk_add_edit.html')
-
-    def _get_form_model(self):
-        m=self._app_name.replace('__', '.')
-        app_models = __import__(m, globals(), locals(), ['models'], -1)
-        self._model = getattr(app_models.models, self._model_name)
-        self._form_metaclass = modelform_factory(self._model)
+        self._context['base_template'] = 'sk_page_base.html'
+        if hasattr(settings, 'PAGE_BASE'):
+            self._context['base_template'] = settings.PAGE_BASE
+        
+        if self._disp_model.formset_model is not None:
+            Formset = form_models.inlineformset_factory(self._disp_model.model, self._disp_model.formset_model, extra=2)
+            if self.request.POST:
+                self._context['formset'] = Formset(self.request.POST)
+            else:
+                instance = None
+                if self._item_id is not None:
+                    instance = self.object
+                self._context['formset'] = Formset(instance = instance)
+        return self._context
     
     def _add_line(self, line):
-        self._content['success'] += '<p>%s</p>\n' % line
+        if not 'success' in self._context:
+            self.request.session['success'] = []
+        self.request.session['success'].append(line)
+
+class AddItem(AddEditItem):
+    action = 'Add'
+
+class EditItem(AddEditItem):
+    action = 'Edit'
+
+def delete_item(request, app_name, model_name, item_id):
+    apps = SkeletalDisplay.get_display_apps()
+    disp_model = apps[app_name][model_name]
+    item = disp_model.model.objects.get(id=int(item_id))
+    item.delete()
+    return redirect(reverse('display_model', args=[app_name, model_name]))

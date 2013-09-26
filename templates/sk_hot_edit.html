@@ -3,6 +3,7 @@
 {% load HotDjangoTags %}
 
 {% block extra_css %}
+	{{ block.super }}
 	{% hot_render_css %}
 {% endblock %}
 
@@ -11,5 +12,6 @@
 {% endblock %}
 
 {% block extra_js %}
+	{{ block.super }}
 	{% hot_render_js %}
 {% endblock %}
