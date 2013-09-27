@@ -1,9 +1,7 @@
-from django.forms.models import modelform_factory
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
 import SkeletalDisplay.views_base as viewb
 import django.views.generic.edit as generic_editor
-import Orders.models as m
 import django.forms.models as form_models
 import settings
 import SkeletalDisplay

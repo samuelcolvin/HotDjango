@@ -4,7 +4,7 @@
 	<form method="post" action="">
 	{% load bootstrap3 %}
 	{% csrf_token %}
-	{{ form.non_form_errors.as_ul }}
+	{{ form.non_field_errors.as_ul }}
 	{% bootstrap_form form %}
 	{% bootstrap_form_buttons %}
 	<fieldset class="formset">

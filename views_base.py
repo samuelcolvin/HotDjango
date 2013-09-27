@@ -35,31 +35,8 @@ class ViewBase():
         
         if not hasattr(self, '_context'):
             self._context={}
-        
-        if 'message' in self.request.session:
-            self._context['info'] = self.request.session.pop('info')
-        if 'success' in self.request.session:
-            self._context['success'] = self.request.session.pop('success')
-        if 'error' in self.request.session:
-            self._context['error'] = self.request.session.pop('error')
-        self._context['base_template'] = 'sk_page_base.html'
-        if hasattr(settings, 'PAGE_BASE'):
-            self._context['base_template'] = settings.PAGE_BASE
-            
-        side_menu = self._side_menu()
-
-        top_menu = []
-        for item in settings.TOP_MENU:
-            menu_item = {'url': reverse(item['url']), 'name': item['name']}
-            if item['url'] == self._top_active:
-                menu_item['class'] = 'active'
-            top_menu.append(menu_item)
-        if self.request.user.is_staff:
-            top_menu.append({'url': reverse('admin:index'), 'name': 'Admin'})
-        else:
-            top_menu.append({'url': reverse('logout'), 'name': 'Logout'})
-        site_title = settings.SITE_TITLE
-        self._context.update({'top_menu': top_menu, 'site_title': site_title, 'menu': side_menu})
+        self._context['menu'] = self._side_menu()
+        self._context.update(basic_context(self.request, self._top_active))
 
     
     def _find_model(self, app_name, model_name):
@@ -98,3 +75,43 @@ class TemplateBase(generic.TemplateView, ViewBase):
 
 def get_plural_name(dm):
     return  unicode(dm.model._meta.verbose_name_plural)
+
+def basic_context(request, top_active = None):
+    context = {}
+    if 'message' in request.session:
+        context['info'] = request.session.pop('info')
+    if 'success' in request.session:
+        context['success'] = request.session.pop('success')
+    if 'errors' in request.session:
+        context['errors'] = request.session.pop('errors')
+    context['base_template'] = 'sk_page_base.html'
+    if hasattr(settings, 'PAGE_BASE'):
+        context['base_template'] = settings.PAGE_BASE
+
+    top_menu = []
+    for item in settings.TOP_MENU:
+        menu_item = {'url': reverse(item['url']), 'name': item['name']}
+        if item['url'] == top_active:
+            menu_item['class'] = 'active'
+        top_menu.append(menu_item)
+    if request.user.is_staff:
+        top_menu.append({'url': reverse('admin:index'), 'name': 'Admin'})
+    else:
+        top_menu.append({'url': reverse('logout'), 'name': 'Logout'})
+    context['site_title'] = settings.SITE_TITLE
+    context['top_menu'] = top_menu
+    return context
+
+
+
+
+
+
+
+
+
+
+
+
+
+
