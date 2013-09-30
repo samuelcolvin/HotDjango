@@ -6,7 +6,6 @@
 	{% csrf_token %}
 	{{ form.non_field_errors.as_ul }}
 	{% bootstrap_form form %}
-	{% bootstrap_form_buttons %}
 	<fieldset class="formset">
 		<div class="table-title"><strong>{{formset.name}}</strong></div>
 		{{ formset.management_form }}
@@ -36,8 +35,9 @@
 		{% endfor %}
 		</table>
     </fieldset>
-	{% end_bootstrap_form_buttons %}
-	<input type="submit" value="Save" />
+    {% bootstrap_form_buttons %}
+            <button type="submit" class="btn btn-primary">Submit</button>
+    {% end_bootstrap_form_buttons %}
 	</form>
 {% endblock %}
 

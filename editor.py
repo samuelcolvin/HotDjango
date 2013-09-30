@@ -10,14 +10,13 @@ class HotEdit(viewb.TemplateBase):
     template_name = 'sk_hot_edit.html'
 
     def get_context_data(self, **kw):
-        self.setup_context(**kw)
         self._context['title'] = 'Mass Editor'
         self._top_active = 'display_index'
         self._context['app_name'] = self._app_name
         self._context['model_name'] = self._model_name
         return self._context
 
-class AddEditItem(generic_editor.TemplateResponseMixin, generic_editor.ModelFormMixin, generic_editor.ProcessFormView, viewb.ViewBase): 
+class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_editor.ModelFormMixin, generic_editor.ProcessFormView): 
     template_name = 'sk_add_edit.html'
     
     def setup_context(self, **kw):
@@ -30,11 +29,9 @@ class AddEditItem(generic_editor.TemplateResponseMixin, generic_editor.ModelForm
         if self._item_id is not None:
             self.object = self._item
     
-    def get(self, request, *args, **kw):
-        self.setup_context(**kw)
-        return super(AddEditItem, self).get(request, *args, **kw)
-    
     def post(self, request, *args, **kw):
+        if not self.is_allowed():
+            return redirect(reverse('permission_denied'))
         self.setup_context(**kw)
         return super(AddEditItem, self).post(request, *args, **kw)
     

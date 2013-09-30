@@ -24,48 +24,49 @@ class Index(viewb.TemplateBase):
 	template_name = 'sk_index.html'
 	
 	def get_context_data(self, **kw):
-		self.setup_context(**kw)
 		self._context['title'] = settings.SITE_TITLE
 		return self._context
 
 class DisplayIndex(viewb.TemplateBase):
 	template_name = 'sk_display_index.html'
+	top_active = 'display_index'
 	
 	def get_context_data(self, **kw):
-		self.setup_context(**kw)
 		self._context['title'] = settings.SITE_TITLE
-		self._top_active = 'display_index'
 		return self._context
 
 class DisplayModel(viewb.TemplateBase):
 	template_name = 'sk_model_display.html'
+	top_active = 'display_index'
 	
 	def get_context_data(self, **kw):
-		self.setup_context(**kw)
-		links = [{'url': viewb.reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t}]
+		links =[]
+		if self._disp_model.addable:
+			links.append({'url': viewb.reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t})
 		if hasattr(self._disp_model, 'HotTable'):
 			links.append({'url': viewb.reverse('hot_edit', kwargs={'app': self._app_name, 'model': self._model_name}), 'name': 'Mass Edit'})
-		crums = self._set_crums(set_to = [{'url': viewb.reverse('display_index'), 'name': 'Model Display'},
+		if self._disp_model.show_crums:
+			self._context['crums'] = self._set_crums(set_to = [{'url': viewb.reverse('display_index'), 'name': 'Model Display'},
 										{'url': viewb.reverse('display_model', args=(self._app_name, self._model_name)), 'name' : self._plural_t}])
 		table = self._disp_model.DjangoTable(self._disp_model.model.objects.all())
 		RequestConfig(self.request).configure(table)
-		self._context.update({'page_menu': links, 'crums': crums, 'table': table, 'model_title': self._plural_t})
+		self._context.update({'page_menu': links, 'table': table, 'model_title': self._plural_t})
 		
 		self._context['title'] = self._plural_t
-		self._top_active = 'display_index'
 		return self._context
 
 class DisplayItem(viewb.TemplateBase):
 	template_name = 'sk_item_display.html'
+	top_active = 'display_index'
 	
-	def get_context_data(self, **kw):
-		self.setup_context(**kw)
-		
+	def get_context_data(self, **kw):		
 		links = []
+		if self._disp_model.addable:
+			links.append({'url': viewb.reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t})
 		if self._disp_model.editable:
-			links = [{'url': viewb.reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t},
-					{'url': viewb.reverse('edit_item', args=[self._app_name, self._model_name, self._item.id]), 'name': 'Edit Item'},
-					{'url': viewb.reverse('delete_item', args=[self._app_name, self._model_name, self._item.id]), 'name': 'Delete Item'}]
+			links.append({'url': viewb.reverse('edit_item', args=[self._app_name, self._model_name, self._item.id]), 'name': 'Edit ' + self._single_t})
+		if self._disp_model.deletable:
+			links.append({'url': viewb.reverse('delete_item', args=[self._app_name, self._model_name, self._item.id]), 'name': 'Delete ' + self._single_t})
 		
 		status_groups=[{'title': None, 'fields': self._populate_fields(self._item, self._disp_model)}]
 		
@@ -75,13 +76,13 @@ class DisplayItem(viewb.TemplateBase):
 			
 		tbelow = self._populate_tables(self._item, self._disp_model)
 		name = str(self._disp_model.model.objects.get(id=int(self._item_id)))
-		crums = self._set_crums(add = [{'url': viewb.reverse('display_item', args=(self._app_name, self._model_name, int(self._item_id))), 'name': name}])
+		if self._disp_model.show_crums:
+			self._context['crums'] = self._set_crums(add = [{'url': viewb.reverse('display_item', args=(self._app_name, self._model_name, int(self._item_id))), 'name': name}])
 		
-		self._context.update({'page_menu': links, 'status_groups': status_groups, 'crums': crums, 'tables_below': tbelow})
+		self._context.update({'page_menu': links, 'status_groups': status_groups, 'tables_below': tbelow})
 
 		title = '%s: %s' %  (self._single_t, str(self._item))
 		self._context['title'] = title
-		self._top_active = 'display_index'
 		return self._context
 	
 	def _populate_fields(self, item, dm, exceptions=[]):
@@ -112,9 +113,9 @@ class DisplayItem(viewb.TemplateBase):
 			else:
 				popul = getattr(item,  tab['populate_func'])()
 			if 'table' in tab:
-				table_def = getattr(self._apps[self._disp_model.app_parent][tab['name']], tab['table'])
+				table_def = getattr(self._apps[self._disp_model._app_name][tab['name']], tab['table'])
 			else:
-				table_def = self._apps[self._disp_model.app_parent][tab['name']].DjangoTable
+				table_def = self._apps[self._disp_model._app_name][tab['name']].DjangoTable
 			this_table['renderable'] = table_def(popul)
 			RequestConfig(self.request).configure(this_table['renderable'])
 			generated_tables.append(this_table)
@@ -134,19 +135,21 @@ class DisplayItem(viewb.TemplateBase):
 		elif isinstance(value, datetime):
 			return value.strftime(settings.CUSTOM_DT_FORMAT)
 		elif isinstance(value, models.Model):
-			model_name = value.__class__.__name__
-			if model_name == 'User':
-				app_name = self._find_app(model_name)
-			else:
-				app_name = value.__module__.replace('.models', '')
-			return '<a href="%s">%s</a>' % (viewb.reverse('display_item', args=[app_name, model_name, value.id]), str(value))
+			(app_name, disp_model) = self._find_model(value.__class__.__name__)
+			return '<a href="%s">%s</a>' % (viewb.reverse('display_item', args=[app_name, disp_model, value.id]), str(value))
 		else:
 			return smart_str(value)
-		
-	def _find_app(self, model_name):
+				
+	def _find_model(self, to_find):
+		for model_name in self._apps[self._app_name].keys():
+			if model_name == to_find:
+				return (self._app_name, model_name)
 		for app_name, app in self._apps.items():
-			if model_name in app.keys():
-				return app_name
+			if app_name == self._app_name:
+				continue
+			for model_name in app.keys():
+				if model_name == to_find:
+					return (app_name, model_name)
 		return None
 	
 	def _find_base(self, value):
@@ -156,3 +159,13 @@ class DisplayItem(viewb.TemplateBase):
 			return '%0.2f' % value
 		else:
 			return '%d' % value
+		
+class UserDisplay(DisplayItem):
+	top_active = 'user_profile'
+	
+	def setup_context(self, **kw):
+		kw['app'] = 'sk'
+		kw ['model'] = 'User'
+		kw['id'] = str(self.request.user.id)
+		super(UserDisplay, self).setup_context(**kw)
+	
