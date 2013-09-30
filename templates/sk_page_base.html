@@ -1,6 +1,6 @@
 {% extends "sk_base.html" %}
 
-{% block content %}   
+{% block body %}   
 <div class="navbar navbar-inverse navbar-fixed-top hidden-print">
   <div class="container">
     <div class="navbar-header">
@@ -19,44 +19,8 @@
   </div>
 </div>
 <div class="container main-container">
-	{% block sidebar %}{% endblock %}
-    <div class="{% block extra_maincol_classes %}{% endblock %}">
-      {% block top_of_page %}{% endblock %}
-		{% if crums %}
-			<ol class="breadcrumb">
-				{% for item in crums %}
-				{% if forloop.last %}
-					<li class="active">{{item.name}}</li>
-				{% else %}
-					<li><a href="{{item.url}}">{{item.name}}</a></li>
-				{% endif %}
-				{% endfor %}
-			</ol>
-		{% endif %}
-		{% if info %}<div class="alert alert-info">
-			{% for info_i in info %} <p>{{info_i}}</p> {% endfor %}
-		</div>{% endif %}
-		{% if success %}<div class="alert alert-success">
-			{% for s in success %} <p>{{s}}</p> {% endfor %}
-		</div>{% endif %}
-		{% if errors %}<div class="alert alert-danger">
-			{% for error in errors %} <p>{{error}}</p> {% endfor %}
-		</div>{% endif %}
-		{% if page_menu %}
-		<div id="page-menu" class="hidden-print">
-			<p>
-				{% for item in page_menu %}
-					{% if item.url %}<a href="{{item.url}}" class="btn btn-default">{{item.name}}</a>
-					{% elif item.onclick %}<button type="button" class="btn btn-default" onclick="{{item.onclick}}">{{item.name}}</button>
-					{% endif %}
-				{% endfor %}
-			</p>
-		</div>
-		{% endif %}
-		<div>
-			<h4>{{title}}</h4>
-		</div>
-		{% block maincol_content %}{% endblock %}
-	</div> <!-- main col-->
+	{% load SkeletalDisplayTags %}
+	{% sk_headings %}
+	{% block content %}{% endblock %}
 </div>
 {% endblock content %}

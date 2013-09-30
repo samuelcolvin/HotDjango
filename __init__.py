@@ -14,13 +14,11 @@ class _MetaModelDisplay(HotDjango._MetaBaseDisplayModel):
         if hasattr(cls, 'DjangoTable'):
             if hasattr(cls.DjangoTable, 'Meta'):
                 cls.DjangoTable.Meta.model = cls.model
-            else:
-                cls.DjangoTable.Meta = type('Meta', (), {'model': cls.model})
         HotDjango._MetaBaseDisplayModel.__init__(cls, *args, **kw)
 
 class ModelDisplay(HotDjango.BaseDisplayModel):
     __metaclass__ = _MetaModelDisplay
-    extra_funcs = {}
+    extra_funcs = []
     extra_fields = {}
     extra_models = {}
     attached_tables = []
@@ -32,7 +30,7 @@ class ModelDisplay(HotDjango.BaseDisplayModel):
     deletable = True
     form = None
     formset_model = None
-    page_template = None
+    queryset= None
     
 class ModelDisplayMeta:
     orderable = False

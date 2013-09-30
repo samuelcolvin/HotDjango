@@ -1,15 +1,15 @@
-{% extends page_template %}
+{% extends base_template %}
 
-{% block maincol_content %}
-		{% for group in status_groups %}
-			{% if group.title %}<h5>{{group.title}}</h5>{% endif %}
-			<dl class="dl-horizontal">
-				{% for item in group.fields %}
-			    	<dt>{{item.name}}</dt>
-  					<dd>{{item.state|safe}}</dd>
-				{% endfor %}
-			</ld>
-		{% endfor %}
+{% block content %}
+	{% for group in status_groups %}
+		{% if group.title %}<h5>{{group.title}}</h5>{% endif %}
+		<dl class="dl-horizontal">
+			{% for item in group.fields %}
+		    	<dt>{{item.name}}</dt>
+				<dd>{{item.state|safe}}</dd>
+			{% endfor %}
+		</ld>
+	{% endfor %}
 	{% if tables_below %}
 	{% load render_table from django_tables2 %}
 	{% for table in tables_below %}

@@ -13,7 +13,6 @@ class User(SkeletalDisplay.ModelDisplay):
     addable = False
     editable = True
     deletable = False
-    page_template = 'sk_no_menu.html'
     attached_tables = [{'name':'Group', 'populate':'groups', 'title':'Groups'}]
     show_crums = False
     

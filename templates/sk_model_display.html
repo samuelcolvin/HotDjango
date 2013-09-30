@@ -1,6 +1,6 @@
-{% extends page_template %}
+{% extends base_template %}
 
-{% block maincol_content %}
+{% block content %}
 	<div id="set-list">
 	{% load render_table from django_tables2 %}
 	{% render_table table %}

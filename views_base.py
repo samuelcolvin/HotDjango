@@ -12,11 +12,22 @@ class Authenticated(object):
         return super(Authenticated, self).dispatch(request, *args, **kwargs)
     
 class ViewBase(Authenticated):
+    side_menu = True
+    all_auth_permitted = False
+    extra_permission_check = False
+    
     def get(self, request, *args, **kw):
-        if not self.is_allowed():
-            return redirect(reverse('permission_denied'))
         self.setup_context(**kw)
+        if not self.check_permissions():
+            return redirect(reverse('permission_denied'))
         return super(ViewBase, self).get(request, *args, **kw)
+    
+    def check_permissions(self):
+        if self.all_auth_permitted or self.is_allowed():
+            return True
+        if self.extra_permission_check and self.has_extra_permission():
+            return True
+        return False
     
     def setup_context(self, **kw):
         self._apps = SkeletalDisplay.get_display_apps()
@@ -33,10 +44,8 @@ class ViewBase(Authenticated):
         
         if not hasattr(self, '_context'):
             self._context={}
-        self._context['page_template'] = 'sk_menu_page.html'
-        if self._disp_model is not None and self._disp_model.page_template is not None:
-            self._context['page_template'] = self._disp_model.page_template
-        self._context['menu'] = self._side_menu()
+        if self.side_menu:
+            self._generate_side_menu()
         top_active = None
         if hasattr(self, 'top_active'):
             top_active = self.top_active
@@ -61,7 +70,7 @@ class ViewBase(Authenticated):
                 self.request.session['crums'] += add
         return self.request.session['crums']
     
-    def _side_menu(self):
+    def _generate_side_menu(self):
         side_menu = []
         active = None
         if self._disp_model is not None: active = self._disp_model.__name__
@@ -74,13 +83,15 @@ class ViewBase(Authenticated):
                     side_menu.append({'url': reverse('display_model', args=[app_name, model_name]), 
                                     'name': get_plural_name(model), 'class': cls, 'index': model.index})
         side_menu = sorted(side_menu, key=lambda d: d['index'])
-        return side_menu
+        self._context['side_menu'] = side_menu
 
 class TemplateBase(ViewBase, generic.TemplateView):
     pass
 
 class PermissionDenied(ViewBase, generic.TemplateView):
     template_name = 'sk_simple_message.html'
+    side_menu = False
+    all_auth_permitted = True
     
     def get(self, request, *args, **kw):
         self.setup_context(**kw)
@@ -93,11 +104,13 @@ class PermissionDenied(ViewBase, generic.TemplateView):
 def get_plural_name(dm):
     return  unicode(dm.model._meta.verbose_name_plural)
       
-def is_allowed_sk(user):
+def is_allowed_sk(user, permitted_groups=None):
     if user.is_staff:
         return True
+    if permitted_groups is None:
+        permitted_groups = settings.SK_PERMITTED_GROUPS
     for group in user.groups.all().values_list('name'):
-        if group in settings.SK_PERMITTED_GROUPS:
+        if group in permitted_groups:
             return True
     return False
 
@@ -117,11 +130,17 @@ def basic_context(request, top_active = None):
     if hasattr(settings, 'PAGE_BASE'):
         context['base_template'] = settings.PAGE_BASE
 
-    raw_menu = settings.TOP_MENU[:]
+    raw_menu = []
+    for item in settings.TOP_MENU:
+        if 'groups' in item:
+            if is_allowed_sk(request.user, permitted_groups=item['groups']):
+                raw_menu.append(item)
+        else:
+            raw_menu.append(item)           
     if is_allowed_sk(request.user):
         raw_menu.append({'url': 'display_index', 'name': settings.SK_LABEL})
     if request.user.is_staff:
-        raw_menu.append({'url': 'admin:index', 'name': 'Admin'})
+        raw_menu.append({'url': 'admin:index', 'name': 'Staff Admin'})
     raw_menu.append({'url': 'user_profile', 'name': 'Account'})
     raw_menu.append({'url': 'logout', 'name': 'Logout'})
     top_menu = []

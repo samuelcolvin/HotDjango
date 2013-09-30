@@ -8,10 +8,11 @@ from django.contrib.auth import logout as auth_logout
 from django.http import HttpResponseRedirect
 import SkeletalDisplay.views_base as viewb
 import django.contrib.auth.views
+from django.core.urlresolvers import reverse
 
 def logout(request):
 	auth_logout(request)
-	return HttpResponseRedirect(viewb.reverse('index'))
+	return HttpResponseRedirect(reverse('index'))
 
 def login(*args):
 	template = 'sk_login.html'
@@ -22,6 +23,12 @@ def login(*args):
 
 class Index(viewb.TemplateBase):
 	template_name = 'sk_index.html'
+	side_menu = False
+	all_auth_permitted = True
+	
+	def setup_context(self, **kw):
+		self.request.session['top_active'] = None
+		super(Index, self).setup_context(**kw)
 	
 	def get_context_data(self, **kw):
 		self._context['title'] = settings.SITE_TITLE
@@ -40,62 +47,74 @@ class DisplayModel(viewb.TemplateBase):
 	top_active = 'display_index'
 	
 	def get_context_data(self, **kw):
-		links =[]
-		if self._disp_model.addable:
-			links.append({'url': viewb.reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t})
-		if hasattr(self._disp_model, 'HotTable'):
-			links.append({'url': viewb.reverse('hot_edit', kwargs={'app': self._app_name, 'model': self._model_name}), 'name': 'Mass Edit'})
+		self._context['page_menu'] = self.set_links()
 		if self._disp_model.show_crums:
-			self._context['crums'] = self._set_crums(set_to = [{'url': viewb.reverse('display_index'), 'name': 'Model Display'},
-										{'url': viewb.reverse('display_model', args=(self._app_name, self._model_name)), 'name' : self._plural_t}])
-		table = self._disp_model.DjangoTable(self._disp_model.model.objects.all())
-		RequestConfig(self.request).configure(table)
-		self._context.update({'page_menu': links, 'table': table, 'model_title': self._plural_t})
+			self._context['crums'] = self._set_crums(set_to = [{'url': reverse('display_index'), 'name': 'Model Display'},
+										{'url': reverse('display_model', args=(self._app_name, self._model_name)), 'name' : self._plural_t}])
+		if self._disp_model.queryset is not None:
+			table = self._disp_model.DjangoTable(self._disp_model.queryset())
+		else:
+			table = self._disp_model.DjangoTable(self._disp_model.model.objects.all())
+# 		RequestConfig(self.request).configure(table)
+		self._context['table'] = table
 		
 		self._context['title'] = self._plural_t
 		return self._context
+	
+	def set_links(self):
+		links =[]
+		if self._disp_model.addable:
+			links.append({'url': reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t})
+		if hasattr(self._disp_model, 'HotTable'):
+			links.append({'url': reverse('hot_edit', kwargs={'app': self._app_name, 'model': self._model_name}), 'name': 'Mass Edit'})
+		return links
 
 class DisplayItem(viewb.TemplateBase):
 	template_name = 'sk_item_display.html'
 	top_active = 'display_index'
 	
-	def get_context_data(self, **kw):		
-		links = []
-		if self._disp_model.addable:
-			links.append({'url': viewb.reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t})
-		if self._disp_model.editable:
-			links.append({'url': viewb.reverse('edit_item', args=[self._app_name, self._model_name, self._item.id]), 'name': 'Edit ' + self._single_t})
-		if self._disp_model.deletable:
-			links.append({'url': viewb.reverse('delete_item', args=[self._app_name, self._model_name, self._item.id]), 'name': 'Delete ' + self._single_t})
-		
+	def get_context_data(self, **kw):
+		self._context['page_menu'] = self.set_links()
 		status_groups=[{'title': None, 'fields': self._populate_fields(self._item, self._disp_model)}]
 		
 		for field_name, model_name in self._disp_model.extra_models.items():
-			status_groups.append({'title': model_name, 
-								'fields': self._populate_fields(getattr(self._item, field_name), self._apps[self._app_name][model_name])})
-			
-		tbelow = self._populate_tables(self._item, self._disp_model)
+			status_groups.append({'title': model_name, 'fields': self._populate_fields(getattr(self._item, field_name), self._apps[self._app_name][model_name])})
+		
+		self._context['status_groups'] = status_groups
+		
+		self._context['tables_below'] = self._populate_tables(self._item, self._disp_model)
 		name = str(self._disp_model.model.objects.get(id=int(self._item_id)))
 		if self._disp_model.show_crums:
-			self._context['crums'] = self._set_crums(add = [{'url': viewb.reverse('display_item', args=(self._app_name, self._model_name, int(self._item_id))), 'name': name}])
+			self._context['crums'] = self._set_crums(add = [{'url': reverse('display_item', args=(self._app_name, self._model_name, int(self._item_id))), 'name': name}])
 		
-		self._context.update({'page_menu': links, 'status_groups': status_groups, 'tables_below': tbelow})
-
 		title = '%s: %s' %  (self._single_t, str(self._item))
 		self._context['title'] = title
 		return self._context
 	
+	def set_links(self):
+		links = []
+		if self._disp_model.addable:
+			links.append({'url': reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t})
+		if self._disp_model.editable:
+			links.append({'url': reverse('edit_item', args=[self._app_name, self._model_name, self._item.id]), 'name': 'Edit ' + self._single_t})
+		if self._disp_model.deletable:
+			links.append({'url': reverse('delete_item', args=[self._app_name, self._model_name, self._item.id]), 
+						'name': 'Delete ' + self._single_t, 'classes': 'confirm-follow', 
+                      'msg': 'Are you sure you wish to delete this item?'})
+		return links
+		
 	def _populate_fields(self, item, dm, exceptions=[]):
 		item_fields=[]
+		for name, func in dm.extra_funcs:
+			value = getattr(item, func)()
+			value = self._convert_to_string(value)
+			item_fields.append({'name': name, 'state': value})
 		for field in dm.model._meta.fields:
 			if field.name in exceptions or field.name in dm.exclude:
 				continue
 			name = field.verbose_name
 			value = self._convert_to_string(getattr(item, field.name))
 			item_fields.append({'name': name, 'state': value })
-		for func in dm.extra_funcs:
-			value = self._convert_to_string(getattr(item, dm.extra_funcs[func])())
-			item_fields.append({'name': func, 'state': value})
 		for name, field in dm.extra_fields.items():
 			sub_item = item
 			for part in field.split('__'):
@@ -117,7 +136,7 @@ class DisplayItem(viewb.TemplateBase):
 			else:
 				table_def = self._apps[self._disp_model._app_name][tab['name']].DjangoTable
 			this_table['renderable'] = table_def(popul)
-			RequestConfig(self.request).configure(this_table['renderable'])
+# 			RequestConfig(self.request).configure(this_table['renderable'])
 			generated_tables.append(this_table)
 
 		return generated_tables
@@ -136,7 +155,7 @@ class DisplayItem(viewb.TemplateBase):
 			return value.strftime(settings.CUSTOM_DT_FORMAT)
 		elif isinstance(value, models.Model):
 			(app_name, disp_model) = self._find_model(value.__class__.__name__)
-			return '<a href="%s">%s</a>' % (viewb.reverse('display_item', args=[app_name, disp_model, value.id]), str(value))
+			return '<a href="%s">%s</a>' % (reverse('display_item', args=[app_name, disp_model, value.id]), str(value))
 		else:
 			return smart_str(value)
 				
@@ -162,6 +181,8 @@ class DisplayItem(viewb.TemplateBase):
 		
 class UserDisplay(DisplayItem):
 	top_active = 'user_profile'
+	all_auth_permitted = True
+	side_menu = False
 	
 	def setup_context(self, **kw):
 		kw['app'] = 'sk'

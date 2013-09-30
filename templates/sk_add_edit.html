@@ -1,11 +1,11 @@
-{% extends "sk_menu_page.html" %}
+{% extends base_template %}
 
-{% block maincol_content %}
+{% block content %}
 	<form method="post" action="">
-	{% load bootstrap3 %}
+	{% load bootstrap %}
 	{% csrf_token %}
 	{{ form.non_field_errors.as_ul }}
-	{% bootstrap_form form %}
+	{{ form|bootstrap }}
 	<fieldset class="formset">
 		<div class="table-title"><strong>{{formset.name}}</strong></div>
 		{{ formset.management_form }}
@@ -35,9 +35,7 @@
 		{% endfor %}
 		</table>
     </fieldset>
-    {% bootstrap_form_buttons %}
-            <button type="submit" class="btn btn-primary">Submit</button>
-    {% end_bootstrap_form_buttons %}
+    <button type="submit" class="btn btn-primary">Submit</button>
 	</form>
 {% endblock %}
 

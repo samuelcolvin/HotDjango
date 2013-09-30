@@ -1,4 +1,4 @@
-{% extends "sk_menu_page.html" %}
+{% extends base_template %}
 
 {% load HotDjangoTags %}
 
@@ -7,7 +7,7 @@
 	{% hot_render_css %}
 {% endblock %}
 
-{% block maincol_content %}
+{% block content %}
 	{% hot_render app_name model_name %}
 {% endblock %}
 
