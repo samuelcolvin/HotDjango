@@ -2,7 +2,6 @@ from django.utils.encoding import smart_str
 from datetime import datetime
 import settings
 from django.db import models
-from django_tables2 import RequestConfig
 
 from django.contrib.auth import logout as auth_logout
 from django.http import HttpResponseRedirect
@@ -48,9 +47,6 @@ class DisplayModel(viewb.TemplateBase):
 	
 	def get_context_data(self, **kw):
 		self._context['page_menu'] = self.set_links()
-		if self._disp_model.show_crums:
-			self._context['crums'] = self._set_crums(set_to = [{'url': reverse('display_index'), 'name': 'Model Display'},
-										{'url': reverse('display_model', args=(self._app_name, self._model_name)), 'name' : self._plural_t}])
 		if self._disp_model.queryset is not None:
 			table = self._disp_model.DjangoTable(self._disp_model.queryset())
 		else:
@@ -62,9 +58,7 @@ class DisplayModel(viewb.TemplateBase):
 		return self._context
 	
 	def set_links(self):
-		links =[]
-		if self._disp_model.addable:
-			links.append({'url': reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t})
+		links = super(DisplayModel, self).set_links()
 		if hasattr(self._disp_model, 'HotTable'):
 			links.append({'url': reverse('hot_edit', kwargs={'app': self._app_name, 'model': self._model_name}), 'name': 'Mass Edit'})
 		return links
@@ -83,23 +77,22 @@ class DisplayItem(viewb.TemplateBase):
 		self._context['status_groups'] = status_groups
 		
 		self._context['tables_below'] = self._populate_tables(self._item, self._disp_model)
+		
 		name = str(self._disp_model.model.objects.get(id=int(self._item_id)))
-		if self._disp_model.show_crums:
-			self._context['crums'] = self._set_crums(add = [{'url': reverse('display_item', args=(self._app_name, self._model_name, int(self._item_id))), 'name': name}])
+		self.set_crums(add = [{'url': 
+		                    reverse('display_item', args=(self._app_name, self._model_name, int(self._item_id))), 'name': name}])
 		
 		title = '%s: %s' %  (self._single_t, str(self._item))
 		self._context['title'] = title
 		return self._context
 	
 	def set_links(self):
-		links = []
-		if self._disp_model.addable:
-			links.append({'url': reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t})
+		links = super(DisplayItem, self).set_links()
 		if self._disp_model.editable:
 			links.append({'url': reverse('edit_item', args=[self._app_name, self._model_name, self._item.id]), 'name': 'Edit ' + self._single_t})
 		if self._disp_model.deletable:
 			links.append({'url': reverse('delete_item', args=[self._app_name, self._model_name, self._item.id]), 
-						'name': 'Delete ' + self._single_t, 'classes': 'confirm-follow', 
+					  'name': 'Delete ' + self._single_t, 'classes': 'confirm-follow', 
                       'msg': 'Are you sure you wish to delete this item?'})
 		return links
 		
@@ -190,3 +183,7 @@ class UserDisplay(DisplayItem):
 		kw['id'] = str(self.request.user.id)
 		super(UserDisplay, self).setup_context(**kw)
 	
+	def set_links(self):
+		links = super(UserDisplay, self).set_links()
+		links.append({'url': 'logout', 'name': 'Logout'})
+		return links

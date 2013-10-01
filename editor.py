@@ -8,8 +8,10 @@ import SkeletalDisplay
 
 class HotEdit(viewb.TemplateBase):
     template_name = 'sk_hot_edit.html'
+    side_menu = False
 
     def get_context_data(self, **kw):
+        self.set_crums(add = [{'url': '', 'name': 'Mass Edit'}])
         self._context['title'] = 'Mass Editor'
         self._top_active = 'display_index'
         self._context['app_name'] = self._app_name
@@ -30,6 +32,7 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
         
     def setup_context(self, **kw):
         super(AddEditItem, self).setup_context(**kw)
+        self.set_crums(add = [{'url': '', 'name': self.action}])
         if self._disp_model.form is not None:
             self.form_class = self._disp_model.form
         else:

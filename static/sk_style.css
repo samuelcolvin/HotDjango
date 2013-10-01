@@ -1,7 +1,11 @@
 .main-container{
 	background-color: white;
-	padding-top: 70px;
+	padding-top: 90px;
 	padding-bottom: 100px;
+}
+
+body{
+	background-color: #eee;
 }
 
 tbody tr:hover {
@@ -27,4 +31,17 @@ tbody tr:hover {
 .centered{
     float: none;
     margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .dl-horizontal dt {
+    width: 200px;
+  }
+  .dl-horizontal dd {
+    margin-left: 220px;
+  }
+}
+
+.form-group select[multiple] {
+    height: 400px;
 }

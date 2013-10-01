@@ -48,10 +48,10 @@ class _AppEncode(json.JSONEncoder):
     
 class Logger:
     def __init__(self):
-        self._log = ''
+        self._log = []
         
     def addline(self, line):
-        self._log +='<p>%s</p>\n' % line
+        self._log.append(line)
         
     def get_log(self):
         return self._log

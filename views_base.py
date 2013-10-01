@@ -1,8 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 import django.views.generic as generic
-import django.core.urlresolvers
 import settings
-import SkeletalDisplay
+import SkeletalDisplay, HotDjango
 from django.core.urlresolvers import reverse
 
 class Authenticated(object):
@@ -38,12 +37,13 @@ class ViewBase(Authenticated):
         if None not in (self._app_name, self._model_name):
             self._disp_model = self._get_model(self._app_name, self._model_name)
             self._plural_t = get_plural_name(self._disp_model)
-            self._single_t = self._disp_model.model._meta.verbose_name.title()
+            self._single_t = get_single_name(self._disp_model)
             if self._item_id is not None:
                 self._item = self._disp_model.model.objects.get(id = int(self._item_id))
         
         if not hasattr(self, '_context'):
             self._context={}
+        self.create_crums()
         if self.side_menu:
             self._generate_side_menu()
         top_active = None
@@ -52,7 +52,7 @@ class ViewBase(Authenticated):
         self._context.update(basic_context(self.request, top_active))
         
     def is_allowed(self):
-        return is_allowed_sk(self.request.user)
+        return HotDjango.is_allowed_hot(self.request.user)
     
     def _get_model(self, app_name, model_name):
         try:
@@ -60,7 +60,16 @@ class ViewBase(Authenticated):
         except:
             raise Exception('ERROR: %s.%s not found' % (app_name, model_name))
     
-    def _set_crums(self, set_to = None, add = None):
+    def set_links(self):
+        links =[]
+        if self._disp_model.addable:
+            links.append({'url': reverse('add_item', args=[self._app_name, self._model_name]), 'name': 'Add ' + self._single_t})
+        return links
+    
+    def set_crums(self, set_to = None, add = None):
+        if not self._disp_model.show_crums:
+            del self.request.session['crums']
+            return
         if set_to is not None:
             self.request.session['crums'] = set_to
         if add is not None:
@@ -68,8 +77,14 @@ class ViewBase(Authenticated):
                 self.request.session['crums'] = add
             elif add[0] != self.request.session['crums'][-1]:
                 self.request.session['crums'] += add
-        return self.request.session['crums']
-    
+        self._context['crums'] = self.request.session['crums']
+        
+    def create_crums(self):
+        if self._disp_model is not None and self._disp_model.display:
+            crums=[{'url': reverse('display_index'), 'name': 'Model Display'}]
+            crums.append({'url': reverse('display_model', args=(self._app_name, self._model_name)), 'name' : self._plural_t})
+            self.set_crums(set_to = crums)
+
     def _generate_side_menu(self):
         side_menu = []
         active = None
@@ -103,16 +118,9 @@ class PermissionDenied(ViewBase, generic.TemplateView):
 
 def get_plural_name(dm):
     return  unicode(dm.model._meta.verbose_name_plural)
-      
-def is_allowed_sk(user, permitted_groups=None):
-    if user.is_staff:
-        return True
-    if permitted_groups is None:
-        permitted_groups = settings.SK_PERMITTED_GROUPS
-    for group in user.groups.all().values_list('name'):
-        if group in permitted_groups:
-            return True
-    return False
+
+def get_single_name(dm):
+    return  unicode(dm.model._meta.verbose_name)
 
 def basic_context(request, top_active = None):
     if top_active is not None:
@@ -133,16 +141,13 @@ def basic_context(request, top_active = None):
     raw_menu = []
     for item in settings.TOP_MENU:
         if 'groups' in item:
-            if is_allowed_sk(request.user, permitted_groups=item['groups']):
+            if HotDjango.is_allowed_hot(request.user, permitted_groups=item['groups']):
                 raw_menu.append(item)
         else:
-            raw_menu.append(item)           
-    if is_allowed_sk(request.user):
-        raw_menu.append({'url': 'display_index', 'name': settings.SK_LABEL})
+            raw_menu.append(item)
+    raw_menu.append({'url': 'user_profile', 'name': 'Account'})
     if request.user.is_staff:
         raw_menu.append({'url': 'admin:index', 'name': 'Staff Admin'})
-    raw_menu.append({'url': 'user_profile', 'name': 'Account'})
-    raw_menu.append({'url': 'logout', 'name': 'Logout'})
     top_menu = []
     for item in raw_menu:
         menu_item = {'url': reverse(item['url']), 'name': item['name']}
