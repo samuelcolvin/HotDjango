@@ -30,10 +30,9 @@ Edit settings.py
 
 	INSTALLED_APPS = [
 		...
+	    'SkeletalDisplay',
 		'django_tables2',
 		'bootstrap3',
-		'HotDjango'
-	    'SkeletalDisplay',
 		...
 	]
 	
@@ -49,32 +48,17 @@ Edit settings.py
 	
 	DISPLAY_APPS = [<<apps to display>>]
 	SITE_TITLE = '<<site name>>'
-	TOP_MENU = [{'url': 'name to reverse', 'name': 'Name for Link'}]
+	EXTRA_TOP_RIGHT_MENU = [{'url': 'display_index', 'name': 'Model Display'},
+							...]
 	LOGIN_REDIRECT_URL = '/'
 	INTERNAL_IPS = ('127.0.0.1',)
 
-edit your projects urls.py to look something like this:
+edit your projects urls.py to point ad Skeletal-display first:
 
-	from django.conf.urls import patterns, include, url
-	import settings
-
-	import SkeletalDisplay.urls
-
-	# Uncomment the next two lines to enable the admin:
-	from django.contrib import admin
-	admin.autodiscover()
-
+	...
 	urlpatterns = patterns('',
-	    #other displays
-	    url(r'^hot/', include('HotDjango.urls')),
-	    url(r'^', include('SkeletalDisplay.urls')),
-	
-	    # Uncomment the admin/doc line below to enable admin documentation:
-	    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-	
-	    # Uncomment the next line to enable the admin:
-	    url(r'^admin/', include(admin.site.urls)),
-	)
+		url(r'^', include('SkeletalDisplay.urls')),
+	...
 
 lastly you need to add a display.py file to each app named in DISPLAY_APPS (see above) to define how the app is displayed.
 
