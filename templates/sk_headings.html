@@ -9,7 +9,7 @@
 	  </div><!--/.well -->
 	</div><!--/sidebar-->
 {% endif %}
-<div class="{% if side_menu %}col-md-9 col-md-pull-3{% endif %}">
+<div class="{% if side_menu %}col-md-9 col-md-pull-3{% else %}col-md-12{% endif %}">
 	{% if crums %}
 	<ol class="breadcrumb">
 		{% for item in crums %}

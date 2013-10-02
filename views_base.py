@@ -14,6 +14,10 @@ class ViewBase(Authenticated):
     side_menu = True
     all_auth_permitted = False
     extra_permission_check = False
+    viewname = 'sk'
+    include_appname_in_args = True
+    include_model_in_args = True
+    base_name = 'Model Display'
     
     def get(self, request, *args, **kw):
         self.setup_context(**kw)
@@ -81,8 +85,8 @@ class ViewBase(Authenticated):
         
     def create_crums(self):
         if self._disp_model is not None and self._disp_model.display:
-            crums=[{'url': reverse('display_index'), 'name': 'Model Display'}]
-            crums.append({'url': reverse('display_model', args=(self._app_name, self._model_name)), 'name' : self._plural_t})
+            crums=[{'url': reverse(self.viewname), 'name': self.base_name}]
+            crums.append({'url': reverse(self.viewname, args=self.args_base(model=self._model_name)), 'name' : self._plural_t})
             self.set_crums(set_to = crums)
 
     def _generate_side_menu(self):
@@ -91,14 +95,29 @@ class ViewBase(Authenticated):
         if self._disp_model is not None: active = self._disp_model.__name__
         for app_name in self._apps:
             for model_name in self._apps[app_name]:
+                if hasattr(self, 'side_menu_items') and model_name not in self.side_menu_items:
+                    continue
                 model = self._apps[app_name][model_name]
                 if model.display:
                     cls = ''
                     if model_name == active: cls = 'open'
-                    side_menu.append({'url': reverse('display_model', args=[app_name, model_name]), 
+                    side_menu.append({'url': reverse(self.viewname, args=self.args_base(app_name, model_name)), 
                                     'name': get_plural_name(model), 'class': cls, 'index': model.index})
         side_menu = sorted(side_menu, key=lambda d: d['index'])
         self._context['side_menu'] = side_menu
+    
+    def args_base(self, app=None, model=None):
+        if app is None:
+            app = self._app_name
+        args = []
+        if self.include_appname_in_args:
+            args = [app]
+        if model is not None and self.include_model_in_args:
+            args.append(model)
+        return args
+    
+    def generate_table(self, table, queryset):
+        return table(queryset, viewname=self.viewname, reverse_args=self.args_base(), apps=self._apps)#, use_model_arg = False
 
 class TemplateBase(ViewBase, generic.TemplateView):
     pass

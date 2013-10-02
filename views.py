@@ -2,7 +2,7 @@ from django.utils.encoding import smart_str
 from datetime import datetime
 import settings
 from django.db import models
-
+import SkeletalDisplay
 from django.contrib.auth import logout as auth_logout
 from django.http import HttpResponseRedirect
 import SkeletalDisplay.views_base as viewb
@@ -48,14 +48,18 @@ class DisplayModel(viewb.TemplateBase):
 	def get_context_data(self, **kw):
 		self._context['page_menu'] = self.set_links()
 		if self._disp_model.queryset is not None:
-			table = self._disp_model.DjangoTable(self._disp_model.queryset())
+			qs = self._disp_model.queryset()
 		else:
-			table = self._disp_model.DjangoTable(self._disp_model.model.objects.all())
+			qs = self._disp_model.model.objects.all()
+		table = self.generate_table(self._disp_model.DjangoTable, qs)
 # 		RequestConfig(self.request).configure(table)
 		self._context['table'] = table
 		
 		self._context['title'] = self._plural_t
 		return self._context
+	
+	def get_item_args(self):
+		return [self._app_name, self._model_name]
 	
 	def set_links(self):
 		links = super(DisplayModel, self).set_links()
@@ -80,7 +84,7 @@ class DisplayItem(viewb.TemplateBase):
 		
 		name = str(self._disp_model.model.objects.get(id=int(self._item_id)))
 		self.set_crums(add = [{'url': 
-		                    reverse('display_item', args=(self._app_name, self._model_name, int(self._item_id))), 'name': name}])
+		                    reverse(self.viewname, args=self.args_base(model = self._model_name) + [int(self._item_id)]), 'name': name}])
 		
 		title = '%s: %s' %  (self._single_t, str(self._item))
 		self._context['title'] = title
@@ -128,7 +132,7 @@ class DisplayItem(viewb.TemplateBase):
 				table_def = getattr(self._apps[self._disp_model._app_name][tab['name']], tab['table'])
 			else:
 				table_def = self._apps[self._disp_model._app_name][tab['name']].DjangoTable
-			this_table['renderable'] = table_def(popul)
+			this_table['renderable'] = self.generate_table(table_def, popul)
 # 			RequestConfig(self.request).configure(this_table['renderable'])
 			generated_tables.append(this_table)
 
@@ -148,21 +152,12 @@ class DisplayItem(viewb.TemplateBase):
 			return value.strftime(settings.CUSTOM_DT_FORMAT)
 		elif isinstance(value, models.Model):
 			(app_name, disp_model) = self._find_model(value.__class__.__name__)
-			return '<a href="%s">%s</a>' % (reverse('display_item', args=[app_name, disp_model, value.id]), str(value))
+			return '<a href="%s">%s</a>' % (reverse(self.viewname, args=self.args_base(app_name, disp_model) + [value.id]), str(value))
 		else:
 			return smart_str(value)
 				
 	def _find_model(self, to_find):
-		for model_name in self._apps[self._app_name].keys():
-			if model_name == to_find:
-				return (self._app_name, model_name)
-		for app_name, app in self._apps.items():
-			if app_name == self._app_name:
-				continue
-			for model_name in app.keys():
-				if model_name == to_find:
-					return (app_name, model_name)
-		return None
+		return SkeletalDisplay.find_model(self._apps, to_find, self._app_name)
 	
 	def _find_base(self, value):
 		if value > 1e3:
