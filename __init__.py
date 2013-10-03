@@ -64,6 +64,19 @@ class SelfLinkColumn(tables.Column):
             args.append(record.id)
             url = reverse(table.viewname, args=args)
             return mark_safe('<a href="%s">%s</a>' % (url, value))
+    
+class SterlingPriceColumn(tables.Column):
+    def render(self, value):
+        if value>1000:
+            return '{:,}'.format(value)
+        elif value>10:
+            return '%0.2f' % value
+        else:
+            string = '%0.3f' % value
+            if string.endswith('0'):
+                return string[:-1]
+            return string
+
 
 def get_display_apps():
     return HotDjango.get_all_apps()

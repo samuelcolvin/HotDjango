@@ -25,7 +25,7 @@ class Group(SkeletalDisplay.ModelDisplay):
     model = Group
     display = False
     
-    class DjangoTable(tables.Table):
+    class DjangoTable(SkeletalDisplay.Table):
         name = tables.Column()
         class Meta(SkeletalDisplay.ModelDisplayMeta):
             pass

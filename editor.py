@@ -9,6 +9,11 @@ import SkeletalDisplay
 class HotEdit(viewb.TemplateBase):
     template_name = 'sk_hot_edit.html'
     side_menu = False
+    
+    def setup_context(self, **kw):
+        super(HotEdit, self).setup_context(**kw)
+        if 'extra_context' in self.request.session:
+            self._context.update(self.request.session['extra_context'])
 
     def get_context_data(self, **kw):
         self.set_crums(add = [{'url': '', 'name': 'Mass Edit'}])
@@ -21,6 +26,7 @@ class HotEdit(viewb.TemplateBase):
 class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_editor.ModelFormMixin, generic_editor.ProcessFormView): 
     template_name = 'sk_add_edit.html'
     extra_permission_check = True
+    action = 'Add'
     
     def _editing_self(self):
         if self._item_id is None:
@@ -32,6 +38,8 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
         
     def setup_context(self, **kw):
         super(AddEditItem, self).setup_context(**kw)
+        if 'extra_context' in self.request.session:
+            self._context.update(self.request.session['extra_context'])
         self.set_crums(add = [{'url': '', 'name': self.action}])
         if self._disp_model.form is not None:
             self.form_class = self._disp_model.form
@@ -66,9 +74,9 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
         if self._editing_self():
             return redirect(reverse('user_profile'))
         if self._item_id is not None:
-            return redirect(reverse('display_item', args=[self._app_name, self._model_name, self._item_id]))
+            return redirect(reverse(self.viewname, args=self.args_base(model=self._model_name) + [self._item_id]))
         else:
-            return redirect(reverse('display_model', args=[self._app_name, self._model_name]))
+            return redirect(reverse(self.viewname, args=self.args_base(model=self._model_name)))
 
     def form_invalid(self, form):
         self.error_log('Form not Valid')
@@ -76,6 +84,8 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
 
     def get_context_data(self, **kw):
         self._context.update(super(AddEditItem, self).get_context_data(**kw))
+        if self._item_id is not None:
+            self.action = 'Edit'
         self._context['title'] = '%s %s' % (self.action, self._disp_model.model_name)
         
         if self._disp_model.formset_model is not None:
@@ -98,16 +108,11 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
         if not 'errors' in self.request.session:
             self.request.session['errors'] = []
         self.request.session['errors'].append(line)
+        
 
-class AddItem(AddEditItem):
-    action = 'Add'
-
-class EditItem(AddEditItem):
-    action = 'Edit'
-
-def delete_item(request, app_name, model_name, item_id):
-    apps = SkeletalDisplay.get_display_apps()
-    disp_model = apps[app_name][model_name]
-    item = disp_model.model.objects.get(id=int(item_id))
-    item.delete()
-    return redirect(reverse('display_model', args=[app_name, model_name]))
+class DeleteItem(viewb.TemplateBase):
+    def get(self, request, *args, **kw):
+        self.setup_context(**kw)
+        self.request.session['success'] = ['%s deleted' % self._item]
+        self._item.delete()
+        return redirect(reverse(self.viewname, args=self.args_base(model=self._model_name)))

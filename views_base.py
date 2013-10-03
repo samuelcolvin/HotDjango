@@ -4,6 +4,8 @@ import settings
 import SkeletalDisplay, HotDjango
 from django.core.urlresolvers import reverse
 
+SK_VIEW_SETTINGS = {'viewname': 'sk', 'args2include': [True, True], 'base_name': 'Model Display'}
+
 class Authenticated(object):
     def dispatch(self, request, *args, **kwargs):
         if settings.LOGIN_REQUIRED and not request.user.is_authenticated():
@@ -14,10 +16,6 @@ class ViewBase(Authenticated):
     side_menu = True
     all_auth_permitted = False
     extra_permission_check = False
-    viewname = 'sk'
-    include_appname_in_args = True
-    include_model_in_args = True
-    base_name = 'Model Display'
     
     def get(self, request, *args, **kw):
         self.setup_context(**kw)
@@ -33,6 +31,12 @@ class ViewBase(Authenticated):
         return False
     
     def setup_context(self, **kw):
+        if not hasattr(self, 'view_settings'):
+            if hasattr(settings, 'SK_VIEW_SETTINGS'):
+                self.view_settings = settings.SK_VIEW_SETTINGS
+            else:
+                self.view_settings = SK_VIEW_SETTINGS
+        self.viewname = self.view_settings['viewname']
         self._apps = SkeletalDisplay.get_display_apps()
         self._disp_model = None
         self._app_name = kw.get('app', None)
@@ -44,12 +48,11 @@ class ViewBase(Authenticated):
             self._single_t = get_single_name(self._disp_model)
             if self._item_id is not None:
                 self._item = self._disp_model.model.objects.get(id = int(self._item_id))
-        
         if not hasattr(self, '_context'):
             self._context={}
         self.create_crums()
         if self.side_menu:
-            self._generate_side_menu()
+            self.generate_side_menu()
         top_active = None
         if hasattr(self, 'top_active'):
             top_active = self.top_active
@@ -72,7 +75,8 @@ class ViewBase(Authenticated):
     
     def set_crums(self, set_to = None, add = None):
         if not self._disp_model.show_crums:
-            del self.request.session['crums']
+            if 'crums' in self.request.session:
+                del self.request.session['crums']
             return
         if set_to is not None:
             self.request.session['crums'] = set_to
@@ -85,11 +89,11 @@ class ViewBase(Authenticated):
         
     def create_crums(self):
         if self._disp_model is not None and self._disp_model.display:
-            crums=[{'url': reverse(self.viewname), 'name': self.base_name}]
+            crums=[{'url': reverse(self.viewname), 'name': self.view_settings['base_name']}]
             crums.append({'url': reverse(self.viewname, args=self.args_base(model=self._model_name)), 'name' : self._plural_t})
             self.set_crums(set_to = crums)
 
-    def _generate_side_menu(self):
+    def generate_side_menu(self):
         side_menu = []
         active = None
         if self._disp_model is not None: active = self._disp_model.__name__
@@ -110,9 +114,9 @@ class ViewBase(Authenticated):
         if app is None:
             app = self._app_name
         args = []
-        if self.include_appname_in_args:
+        if self.view_settings['args2include'][0]:
             args = [app]
-        if model is not None and self.include_model_in_args:
+        if model is not None and self.view_settings['args2include'][1]:
             args.append(model)
         return args
     
