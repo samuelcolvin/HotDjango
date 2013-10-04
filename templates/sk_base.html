@@ -7,11 +7,12 @@
 		{% if debug %}
 		<link rel="stylesheet" href="{% static "css/bootstrap.css" %}">
 		<link rel="stylesheet" href="{% static "css/bootstrap-theme.css" %}">
+		<link rel="stylesheet" href="{% static "sk_style.css" %}?">
 		{% else %}
 		<link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}">
 		<link rel="stylesheet" href="{% static "css/bootstrap-theme.min.css" %}">
+		<link rel="stylesheet" href="{% static "sk_style.css" %}">
 		{% endif %}
-		<link rel="stylesheet" href="{% static "sk_style.css" %}?">
 		{% block extra_css %}{% endblock %}
 	</head>
 	<body>
@@ -20,12 +21,13 @@
 		<script src="{% static "js/lib/jquery-1.10.2.js" %}"></script>
 		<script src="{% static "js/lib/bootstrap.js" %}"></script>
 		<script src="{% static "js/lib/bootbox.js" %}"></script>
+		<script src="{% static "js/general.js" %}?"></script>
 		{% else %}
 		<script src="{% static "js/lib/jquery-1.10.2.min.js" %}"></script>
 		<script src="{% static "js/lib/bootstrap.min.js" %}"></script>
 		<script src="{% static "js/lib/bootbox.min.js" %}"></script>
-		{% endif %}
 		<script src="{% static "js/general.js" %}"></script>
+		{% endif %}
 		{% block extra_js %}{% endblock %}
 	</body>
 </html>
