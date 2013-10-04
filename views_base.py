@@ -5,14 +5,8 @@ import SkeletalDisplay, HotDjango
 from django.core.urlresolvers import reverse
 
 SK_VIEW_SETTINGS = {'viewname': 'sk', 'args2include': [True, True], 'base_name': 'Model Display'}
-
-class Authenticated(object):
-    def dispatch(self, request, *args, **kwargs):
-        if settings.LOGIN_REQUIRED and not request.user.is_authenticated():
-            return redirect(reverse('login'))
-        return super(Authenticated, self).dispatch(request, *args, **kwargs)
     
-class ViewBase(Authenticated):
+class ViewBase(object):
     side_menu = True
     all_auth_permitted = False
     extra_permission_check = False
