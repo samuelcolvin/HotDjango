@@ -4,7 +4,7 @@ import settings
 import SkeletalDisplay, HotDjango
 from django.core.urlresolvers import reverse
 
-SK_VIEW_SETTINGS = {'viewname': 'sk', 'args2include': [True, True], 'base_name': 'Model Display'}
+SK_VIEW_SETTINGS = {'viewname': 'sk', 'args2include': [True, True], 'base_name': 'Model Display', 'top_active': 'sk'}
     
 class ViewBase(object):
     side_menu = True
@@ -26,10 +26,9 @@ class ViewBase(object):
     
     def setup_context(self, **kw):
         if not hasattr(self, 'view_settings'):
+            self.view_settings = SK_VIEW_SETTINGS.copy()
             if hasattr(settings, 'SK_VIEW_SETTINGS'):
-                self.view_settings = settings.SK_VIEW_SETTINGS
-            else:
-                self.view_settings = SK_VIEW_SETTINGS
+                self.view_settings.update(settings.SK_VIEW_SETTINGS)
         self.viewname = self.view_settings['viewname']
         self._apps = SkeletalDisplay.get_display_apps()
         self._disp_model = None
@@ -47,7 +46,7 @@ class ViewBase(object):
         self.create_crums()
         if self.side_menu:
             self.generate_side_menu()
-        top_active = None
+        top_active = self.view_settings['top_active']
         if hasattr(self, 'top_active'):
             top_active = self.top_active
         self._context.update(basic_context(self.request, top_active))

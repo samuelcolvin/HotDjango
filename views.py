@@ -8,6 +8,7 @@ from django.http import HttpResponseRedirect
 import SkeletalDisplay.views_base as viewb
 import django.contrib.auth.views
 from django.core.urlresolvers import reverse
+from django.db.models.query import QuerySet 
 
 def logout(request):
 	auth_logout(request)
@@ -35,7 +36,6 @@ class Index(viewb.TemplateBase):
 
 class DisplayIndex(viewb.TemplateBase):
 	template_name = 'sk_display_index.html'
-	top_active = 'display_index'
 	
 	def get_context_data(self, **kw):
 		self._context['title'] = settings.SITE_TITLE
@@ -43,7 +43,6 @@ class DisplayIndex(viewb.TemplateBase):
 
 class DisplayModel(viewb.TemplateBase):
 	template_name = 'sk_model_display.html'
-	top_active = 'display_index'
 	
 	def get_context_data(self, **kw):
 		self._context['page_menu'] = self.set_links()
@@ -69,7 +68,6 @@ class DisplayModel(viewb.TemplateBase):
 
 class DisplayItem(viewb.TemplateBase):
 	template_name = 'sk_item_display.html'
-	top_active = 'display_index'
 	
 	def get_context_data(self, **kw):
 		self._context['page_menu'] = self.set_links()
@@ -146,6 +144,8 @@ class DisplayItem(viewb.TemplateBase):
 				return u'\u2713'
 			else:
 				return u'\u2718'
+		elif isinstance(value, list) or isinstance(value, tuple) or isinstance(value, QuerySet):
+			return ', '.join([self._convert_to_string(v) for v in value])
 		elif isinstance(value, long) or isinstance(value, int) or isinstance(value, float):
 			return self._find_base(value)
 		elif isinstance(value, datetime):
