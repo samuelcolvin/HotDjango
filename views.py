@@ -12,7 +12,7 @@ from django.db.models.query import QuerySet
 
 def logout(request):
 	auth_logout(request)
-	return HttpResponseRedirect(reverse('index'))
+	return HttpResponseRedirect(settings.LOGIN_URL)
 
 def login(*args):
 	template = 'sk_login.html'
@@ -74,7 +74,9 @@ class DisplayItem(viewb.TemplateBase):
 		status_groups=[{'title': None, 'fields': self._populate_fields(self._item, self._disp_model)}]
 		
 		for field_name, model_name in self._disp_model.extra_models.items():
-			status_groups.append({'title': model_name, 'fields': self._populate_fields(getattr(self._item, field_name), self._apps[self._app_name][model_name])})
+			field = getattr(self._item, field_name)
+			if field:
+				status_groups.append({'title': model_name, 'fields': self._populate_fields(field, self._apps[self._app_name][model_name])})
 		
 		self._context['status_groups'] = status_groups
 		

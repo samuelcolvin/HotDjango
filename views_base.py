@@ -153,7 +153,6 @@ def basic_context(request, top_active = None):
     context['base_template'] = 'sk_page_base.html'
     if hasattr(settings, 'PAGE_BASE'):
         context['base_template'] = settings.PAGE_BASE
-
     raw_menu = []
     for item in settings.TOP_MENU:
         if 'groups' in item:
