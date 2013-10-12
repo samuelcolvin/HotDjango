@@ -45,3 +45,7 @@ tbody tr:hover {
 .form-group select[multiple] {
     height: 400px;
 }
+
+.item-display img{
+	border: solid 1px black;
+}
