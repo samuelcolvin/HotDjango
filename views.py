@@ -155,6 +155,8 @@ class DisplayItem(viewb.TemplateBase):
 		elif isinstance(value, models.Model):
 			(app_name, disp_model) = self._find_model(value.__class__.__name__)
 			return '<a href="%s">%s</a>' % (reverse(self.viewname, args=self.args_base(app_name, disp_model) + [value.id]), str(value))
+		elif isinstance(value, models.fields.files.ImageFieldFile):
+			return '<img style="border: solid 1px black;" src="%s" height="150" alt="image unavailable">' % value.url
 		else:
 			return smart_str(value)
 				
