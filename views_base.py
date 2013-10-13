@@ -9,7 +9,7 @@ SK_VIEW_SETTINGS = {'viewname': 'sk', 'args2include': [True, True], 'base_name':
 class ViewBase(object):
     side_menu = True
     all_auth_permitted = False
-    extra_permission_check = False
+    extra_permission_check = None
     
     def get(self, request, *args, **kw):
         self.setup_context(**kw)
@@ -18,9 +18,9 @@ class ViewBase(object):
         return super(ViewBase, self).get(request, *args, **kw)
     
     def check_permissions(self):
+        if self.extra_permission_check:
+            return self.extra_permission_check()
         if self.all_auth_permitted or self.is_allowed():
-            return True
-        if self.extra_permission_check and self.has_extra_permission():
             return True
         return False
     
@@ -35,24 +35,29 @@ class ViewBase(object):
         self._app_name = kw.get('app', None)
         self._model_name = kw.get('model', None)
         self._item_id = kw.get('id', None)
-        if None not in (self._app_name, self._model_name):
-            self._disp_model = self._get_model(self._app_name, self._model_name)
-            self._plural_t = get_plural_name(self._disp_model)
-            self._single_t = get_single_name(self._disp_model)
-            if self._item_id is not None:
-                self._item = self._disp_model.model.objects.get(id = int(self._item_id))
+        if self._app_name is None and self._model_name is None:
+            self._get_default_names()
+        self._disp_model = self._get_model(self._app_name, self._model_name)
+        self._plural_t = get_plural_name(self._disp_model)
+        self._single_t = get_single_name(self._disp_model)
+        if self._item_id is not None:
+            self._item = self._disp_model.model.objects.get(id = int(self._item_id))
         if not hasattr(self, '_context'):
             self._context={}
         self.create_crums()
         if self.side_menu:
             self.generate_side_menu()
         top_active = self.view_settings['top_active']
-        if hasattr(self, 'top_active'):
-            top_active = self.top_active
+            
+        self.request.session['view_settings'] = {'viewname': self.viewname, 'top_active': top_active}
         self._context.update(basic_context(self.request, top_active))
         
     def is_allowed(self):
         return HotDjango.is_allowed_hot(self.request.user)
+    
+    def _get_default_names(self):
+        self._app_name = [app_name for app_name in self._apps.keys() if app_name != 'sk'][0]
+        self._model_name = sorted(self._apps[self._app_name].values(), key=lambda model: model.index)[0].__name__
     
     def _get_model(self, app_name, model_name):
         try:
@@ -114,7 +119,10 @@ class ViewBase(object):
         return args
     
     def generate_table(self, table, queryset):
-        return table(queryset, viewname=self.viewname, reverse_args=self.args_base(), apps=self._apps)#, use_model_arg = False
+        use_model_arg = True
+        if not self.view_settings['args2include'][1]:
+            use_model_arg = False
+        return table(queryset, viewname=self.viewname, reverse_args=self.args_base(), apps=self._apps, use_model_arg = use_model_arg)
 
 class TemplateBase(ViewBase, generic.TemplateView):
     pass
@@ -131,6 +139,13 @@ class PermissionDenied(ViewBase, generic.TemplateView):
     def get_context_data(self, **kw):
         self._context['main_message'] = 'You do not have Permission to view this page.'
         return self._context
+    
+    def setup_context(self, **kw):
+        if 'view_settings' in self.request.session:
+            self.view_settings = SK_VIEW_SETTINGS.copy()
+            self.view_settings.update(self.request.session['view_settings'])
+        super(PermissionDenied, self).setup_context(**kw)
+        del self._context['crums']
 
 def get_plural_name(dm):
     return  unicode(dm.model._meta.verbose_name_plural)

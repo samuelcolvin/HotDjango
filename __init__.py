@@ -34,6 +34,8 @@ class ModelDisplay(HotDjango.BaseDisplayModel):
     form = None
     formset_model = None
     queryset= None
+    index = 100
+    models2link2 = None
     
 class ModelDisplayMeta:
     orderable = False

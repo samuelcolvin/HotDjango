@@ -34,19 +34,15 @@ class Index(viewb.TemplateBase):
 		self._context['title'] = settings.SITE_TITLE
 		return self._context
 
-class DisplayIndex(viewb.TemplateBase):
-	template_name = 'sk_display_index.html'
-	
-	def get_context_data(self, **kw):
-		self._context['title'] = settings.SITE_TITLE
-		return self._context
-
 class DisplayModel(viewb.TemplateBase):
 	template_name = 'sk_model_display.html'
+	queryset = None
 	
 	def get_context_data(self, **kw):
 		self._context['page_menu'] = self.set_links()
-		if self._disp_model.queryset is not None:
+		if self.queryset:
+			qs = self.queryset()
+		elif self._disp_model.queryset is not None:
 			qs = self._disp_model.queryset()
 		else:
 			qs = self._disp_model.model.objects.all()
@@ -102,16 +98,16 @@ class DisplayItem(viewb.TemplateBase):
 		
 	def _populate_fields(self, item, dm, exceptions=[]):
 		item_fields=[]
-		for name, func in dm.extra_funcs:
-			value = getattr(item, func)()
-			value = self._convert_to_string(value)
-			item_fields.append({'name': name, 'state': value})
 		for field in dm.model._meta.fields:
 			if field.name in exceptions or field.name in dm.exclude:
 				continue
 			name = field.verbose_name
 			value = self._convert_to_string(getattr(item, field.name))
 			item_fields.append({'name': name, 'state': value })
+		for name, func in dm.extra_funcs:
+			value = getattr(item, func)()
+			value = self._convert_to_string(value)
+			item_fields.append({'name': name, 'state': value})
 		for name, field in dm.extra_fields.items():
 			sub_item = item
 			for part in field.split('__'):
@@ -153,8 +149,15 @@ class DisplayItem(viewb.TemplateBase):
 		elif isinstance(value, datetime):
 			return value.strftime(settings.CUSTOM_DT_FORMAT)
 		elif isinstance(value, models.Model):
-			(app_name, disp_model) = self._find_model(value.__class__.__name__)
-			return '<a href="%s">%s</a>' % (reverse(self.viewname, args=self.args_base(app_name, disp_model) + [value.id]), str(value))
+			name = value.__class__.__name__
+			if self._disp_model.models2link2 and name not in self._disp_model.models2link2.keys():
+				return smart_str(value)
+			if  not self._disp_model.models2link2:
+				(app_name, disp_model) = self._find_model(value.__class__.__name__)
+				return '<a href="%s">%s</a>' % (reverse(self.viewname, args=self.args_base(app_name, disp_model) + [value.id]), str(value))
+			else:
+				rev = self._disp_model.models2link2[name]
+				return '<a href="%s">%s</a>' % (reverse(rev, args=[value.id]), str(value))
 		elif isinstance(value, models.fields.files.ImageFieldFile):
 			if value.name:
 				return '<img src="%s" height="150" alt="image unavailable">' % value.url
@@ -185,6 +188,7 @@ class UserDisplay(DisplayItem):
 		super(UserDisplay, self).setup_context(**kw)
 	
 	def set_links(self):
-		links = super(UserDisplay, self).set_links()
-		links.append({'url': 'logout', 'name': 'Logout'})
+		links = [{'url': reverse('password_reset_recover'), 'name': 'Change Password'}]
+		links += super(UserDisplay, self).set_links()
+		links.append({'url': reverse('logout'), 'name': 'Logout'})
 		return links

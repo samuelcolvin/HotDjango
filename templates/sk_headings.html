@@ -22,6 +22,8 @@
 	<div class="alert alert-info">
 		{% for info_i in info %} <p> {{info_i}} </p> {% endfor %}
 	</div>
+	{% else %}
+	<div class="alert alert-info" style="display:none"></div>
 	{% endif %}
 	{% if success %}
 	<div class="alert alert-success">

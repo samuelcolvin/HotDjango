@@ -25,7 +25,6 @@ class HotEdit(viewb.TemplateBase):
 
 class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_editor.ModelFormMixin, generic_editor.ProcessFormView): 
     template_name = 'sk_add_edit.html'
-    extra_permission_check = True
     action = 'Add'
     
     def _editing_self(self):
@@ -33,7 +32,7 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
             return False
         return self._model_name == 'User' and self._item_id is not None and self.request.user.id == int(self._item_id)
     
-    def has_extra_permission(self):
+    def extra_permission_check(self):
         return self._editing_self()
         
     def setup_context(self, **kw):
