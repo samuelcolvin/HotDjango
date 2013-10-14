@@ -10,6 +10,7 @@ class ViewBase(object):
     side_menu = True
     all_auth_permitted = False
     extra_permission_check = None
+    top_active = None
     
     def get(self, request, *args, **kw):
         self.setup_context(**kw)
@@ -19,7 +20,11 @@ class ViewBase(object):
     
     def check_permissions(self):
         if self.extra_permission_check:
-            return self.extra_permission_check()
+            extra = self.extra_permission_check()
+            if extra is True:
+                return True
+            elif extra is False:
+                return False
         if self.all_auth_permitted or self.is_allowed():
             return True
         return False
@@ -48,6 +53,8 @@ class ViewBase(object):
         if self.side_menu:
             self.generate_side_menu()
         top_active = self.view_settings['top_active']
+        if self.top_active:
+            top_active = self.top_active
             
         self.request.session['view_settings'] = {'viewname': self.viewname, 'top_active': top_active}
         self._context.update(basic_context(self.request, top_active))

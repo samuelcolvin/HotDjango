@@ -33,9 +33,13 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
         return self._model_name == 'User' and self._item_id is not None and self.request.user.id == int(self._item_id)
     
     def extra_permission_check(self):
-        return self._editing_self()
+        if self._editing_self():
+            return True
         
     def setup_context(self, **kw):
+        if 'view_settings' in self.request.session:
+            self.view_settings = viewb.SK_VIEW_SETTINGS.copy()
+            self.view_settings.update(self.request.session['view_settings'])
         super(AddEditItem, self).setup_context(**kw)
         if 'extra_context' in self.request.session:
             self._context.update(self.request.session['extra_context'])
