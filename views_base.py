@@ -153,6 +153,9 @@ class PermissionDenied(ViewBase, generic.TemplateView):
             self.view_settings.update(self.request.session['view_settings'])
         super(PermissionDenied, self).setup_context(**kw)
         del self._context['crums']
+        
+    def create_crums(self):
+        self._context['crums'] = None
 
 def get_plural_name(dm):
     return  unicode(dm.model._meta.verbose_name_plural)

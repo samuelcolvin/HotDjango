@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
+	    <meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	    <meta name="description" content="">
+	    <meta name="author" content="">
+	    <meta http-equiv="X-UA-Compatible" content="IE=edge"> 
 		<title>{{title}}</title>
 		{% load staticfiles %}
 		<link rel="icon" type="image/png" href="{% static "favicon.png" %}" />
@@ -13,11 +18,6 @@
 		<link rel="stylesheet" href="{% static "css/bootstrap-theme.min.css" %}">
 		<link rel="stylesheet" href="{% static "sk_style.css" %}">
 		{% endif %}
-		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-		<!--[if lt IE 9]>
-		  <script src="{% static "js/lib/html5shiv.js" %}"></script>
-		  <script src="{% static "js/lib/respond.min.js" %}"></script>
-		<![endif]-->
 		{% block extra_css %}{% endblock %}
 	</head>
 	<body>
@@ -34,5 +34,10 @@
 		<script src="{% static "js/general.js" %}"></script>
 		{% endif %}
 		{% block extra_js %}{% endblock %}
+		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		  <script src="{% static "js/lib/html5shiv.js" %}"></script>
+		  <script src="{% static "js/lib/respond.min.js" %}"></script>
+		<![endif]-->
 	</body>
 </html>
