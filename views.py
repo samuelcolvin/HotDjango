@@ -8,7 +8,8 @@ from django.http import HttpResponseRedirect
 import SkeletalDisplay.views_base as viewb
 import django.contrib.auth.views
 from django.core.urlresolvers import reverse
-from django.db.models.query import QuerySet 
+from django.db.models.query import QuerySet
+import markdown2
 
 def logout(request):
 	auth_logout(request)
@@ -175,6 +176,22 @@ class DisplayItem(viewb.TemplateBase):
 			return '%0.2f' % value
 		else:
 			return '%d' % value
+
+class TextDisplay(viewb.TemplateBase):
+	template_name = 'sk_text_page.html'
+	side_menu = False
+	all_auth_permitted = True
+	body = ''
+	title = 'Empty'
+	
+	def page_setup(self):
+		pass
+	
+	def get_context_data(self, **kw):
+		self.page_setup()
+		self._context['title'] = self.title
+		self._context['page_content'] = markdown2.markdown(self.body)
+		return self._context
 		
 class UserDisplay(DisplayItem):
 	top_active = 'user_profile'

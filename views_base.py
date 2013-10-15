@@ -185,7 +185,6 @@ def basic_context(request, top_active = None):
                 raw_menu.append(item)
         else:
             raw_menu.append(item)
-    raw_menu.append({'url': 'user_profile', 'name': 'Account'})
     if request.user.is_staff:
         raw_menu.append({'url': 'admin:index', 'name': 'Staff Admin'})
     top_menu = []
