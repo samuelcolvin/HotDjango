@@ -2,7 +2,7 @@
 
 {% block content %}
 	{% for group in status_groups %}
-		{% if group.title %}<h5>{{group.title}}</h5>{% endif %}
+		{% if group.title %}<strong>{{group.title}}</strong>{% endif %}
 		<dl class="dl-horizontal item-display">
 			{% for item in group.fields %}
 		    	<dt>{{item.name}}</dt>

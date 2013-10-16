@@ -71,9 +71,10 @@ class DisplayItem(viewb.TemplateBase):
 		status_groups=[{'title': None, 'fields': self._populate_fields(self._item, self._disp_model)}]
 		
 		for field_name, model_name in self._disp_model.extra_models.items():
-			field = getattr(self._item, field_name)
-			if field:
-				status_groups.append({'title': model_name, 'fields': self._populate_fields(field, self._apps[self._app_name][model_name])})
+			model = getattr(self._item, field_name)
+			field =self._item._meta.get_field_by_name(field_name)[0]
+			if model:
+				status_groups.append({'title': field.verbose_name, 'fields': self._populate_fields(model, self._apps[self._app_name][model_name])})
 		
 		self._context['status_groups'] = status_groups
 		
