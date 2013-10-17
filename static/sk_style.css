@@ -49,3 +49,7 @@ tbody tr:hover {
 .item-display img{
 	border: solid 1px black;
 }
+
+.filter-form label{
+	display: none;
+}

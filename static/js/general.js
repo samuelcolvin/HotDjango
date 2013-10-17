@@ -7,3 +7,8 @@ $('.confirm-follow').click(function(e) {
         }    
     });
 });
+
+$('#id_filter').change(
+    function(){
+         $('.filter-form').submit();
+});

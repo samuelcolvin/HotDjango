@@ -10,6 +10,7 @@ import django.contrib.auth.views
 from django.core.urlresolvers import reverse
 from django.db.models.query import QuerySet
 import markdown2
+import django.forms as forms
 
 def logout(request):
 	auth_logout(request)
@@ -34,19 +35,36 @@ class Index(viewb.TemplateBase):
 	def get_context_data(self, **kw):
 		self._context['title'] = settings.SITE_TITLE
 		return self._context
+	
+class FilterForm(forms.Form):
+	def __init__(self, *args, **kwargs):
+		choices = kwargs.pop('choices', ())
+		initial = kwargs.pop('initial', 0)
+		super(FilterForm, self).__init__(*args, **kwargs)
+		self.fields['filter'] = forms.ChoiceField(choices=choices, initial = initial)
 
 class DisplayModel(viewb.TemplateBase):
 	template_name = 'sk_model_display.html'
-	queryset = None
+	_base_queryset = None
 	
 	def get_context_data(self, **kw):
 		self._context['page_menu'] = self.set_links()
-		if self.queryset:
-			qs = self.queryset()
+		extra_filter = None
+		if hasattr(self, 'filter_options'):
+			choices = [(i, choice[0]) for i, choice in enumerate(self.filter_options)]
+			initial = 0
+			if 'filter' in self.request._get_get():
+				initial = int(self.request._get_get()['filter'])
+				extra_filter = self.filter_options[initial][1]
+			self._context['FilterForm'] = FilterForm(choices = choices, initial = initial)
+		if self._base_queryset:
+			qs = self._base_queryset()
 		elif self._disp_model.queryset is not None:
 			qs = self._disp_model.queryset()
 		else:
 			qs = self._disp_model.model.objects.all()
+		if extra_filter:
+			qs = extra_filter(qs)
 		table = self.generate_table(self._disp_model.DjangoTable, qs)
 # 		RequestConfig(self.request).configure(table)
 		self._context['table'] = table
