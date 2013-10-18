@@ -11,6 +11,7 @@ class ViewBase(object):
     all_auth_permitted = False
     extra_permission_check = None
     top_active = None
+    show_crums = True
     
     def get(self, request, *args, **kw):
         self.setup_context(**kw)
@@ -79,6 +80,8 @@ class ViewBase(object):
         return links
     
     def set_crums(self, set_to = None, add = None):
+        if not self.show_crums:
+            return
         if not self._disp_model.show_crums:
             if 'crums' in self.request.session:
                 del self.request.session['crums']
@@ -138,6 +141,7 @@ class PermissionDenied(ViewBase, generic.TemplateView):
     template_name = 'sk_simple_message.html'
     side_menu = False
     all_auth_permitted = True
+    show_crums = False
     
     def get(self, request, *args, **kw):
         self.setup_context(**kw)
@@ -153,9 +157,6 @@ class PermissionDenied(ViewBase, generic.TemplateView):
             self.view_settings.update(self.request.session['view_settings'])
         super(PermissionDenied, self).setup_context(**kw)
         del self._context['crums']
-        
-    def create_crums(self):
-        self._context['crums'] = None
 
 def get_plural_name(dm):
     return  unicode(dm.model._meta.verbose_name_plural)

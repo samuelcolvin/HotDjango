@@ -48,6 +48,13 @@ class Table(tables.Table):
         self.reverse_args_base = kw.pop('reverse_args', None)
         self.apps = kw.pop('apps', None)
         self.use_model_arg = kw.pop('use_model_arg', True)
+        
+        url_args = list(self.reverse_args_base)
+        if self.use_model_arg:
+            url_args.append('__mod_name__')
+        url_args.append('1234567')
+        self._url_base = reverse(self.viewname, args=url_args)
+        
         if self.apps is None:
             self.apps = get_display_apps()
         super(Table, self).__init__(*args, **kw)
@@ -60,11 +67,12 @@ class SelfLinkColumn(tables.Column):
             return value
         else:
             model_name = find_model(table.apps, record.__class__.__name__)[1]
-            args = table.reverse_args_base[:]
-            if table.use_model_arg:
-                args.append(model_name)
-            args.append(record.id)
-            url = reverse(table.viewname, args=args)
+            url = table._url_base.replace('__mod_name__', model_name).replace('1234567', str(record.id))
+#             args = table.reverse_args_base[:]
+#             if table.use_model_arg:
+#                 args.append(model_name)
+#             args.append(record.id)
+#             url = reverse(table.viewname, args=args)
             return mark_safe('<a href="%s">%s</a>' % (url, value))
     
 class SterlingPriceColumn(tables.Column):
