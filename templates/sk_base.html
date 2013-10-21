@@ -6,6 +6,7 @@
 	    <meta name="description" content="">
 	    <meta name="author" content="">
 	    <meta http-equiv="X-UA-Compatible" content="IE=edge"> 
+		{% block extra_meta %}{% endblock %}
 		<title>{{title}}</title>
 		{% load staticfiles %}
 		<link rel="icon" type="image/png" href="{% static "favicon.png" %}" />
