@@ -39,18 +39,21 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
     def setup_context(self, **kw):
         if 'view_settings' in self.request.session:
             self.view_settings = viewb.SK_VIEW_SETTINGS.copy()
+            if hasattr(settings, 'SK_VIEW_SETTINGS'):
+                self.view_settings.update(settings.SK_VIEW_SETTINGS)
             self.view_settings.update(self.request.session['view_settings'])
         super(AddEditItem, self).setup_context(**kw)
         if 'extra_context' in self.request.session:
             self._context.update(self.request.session['extra_context'])
+        self.object = None
+        if self._item_id is not None:
+            self.object = self._item
+            self.action = 'Edit'
         self.set_crums(add = [{'url': '', 'name': self.action}])
         if self._disp_model.form is not None:
             self.form_class = self._disp_model.form
         else:
             self.form_class = form_models.modelform_factory(self._disp_model.model)
-        self.object = None
-        if self._item_id is not None:
-            self.object = self._item
     
     def post(self, request, *args, **kw):
         self.setup_context(**kw)
@@ -87,8 +90,6 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
 
     def get_context_data(self, **kw):
         self._context.update(super(AddEditItem, self).get_context_data(**kw))
-        if self._item_id is not None:
-            self.action = 'Edit'
         self._context['title'] = '%s %s' % (self.action, self._disp_model.model_name)
         
         if self._disp_model.formset_model is not None:
