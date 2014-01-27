@@ -50,7 +50,7 @@
 			{% if item.url %}
 				<a href="{{item.url}}" class="btn btn-default {{item.classes}}" msg="{{ item.msg }}">{{item.name}}</a>
 			{% elif item.onclick %}
-				<button type="button" class="btn btn-default" onclick="{{item.onclick}}">{{item.name}}</button>
+				<button type="button" class="btn btn-default" onclick="{{item.onclick|safe}}">{{item.name}}</button>
 			{% endif %}
 		{% endfor %}
 	</div>

@@ -1,5 +1,14 @@
 {% extends base_template %}
 
+{% if hot %}
+	{% load HotDjangoTags %}
+	
+	{% block extra_css %}
+		{{ block.super }}
+		{% hot_render_css %}
+	{% endblock %}
+{% endif %}
+
 {% block content %}
 	{% for group in status_groups %}
 		{% if group.title %}<strong>{{group.title}}</strong>{% endif %}
@@ -12,10 +21,21 @@
 	{% endfor %}
 	{{ extra_content|safe }}
 	{% if tables_below %}
-	{% load render_table from django_tables2 %}
-	{% for table in tables_below %}
-	<h3>{{table.title}}</h3>
-	{% render_table table.renderable %}
-	{% endfor %}
+		{% load render_table from django_tables2 %}
+		{% for table in tables_below %}
+			<h3>{{table.title}}</h3>
+			{% render_table table.renderable %}
+		{% endfor %}
 	{% endif %}
+	{% if hot %}
+		{% hot_render_extra app_name model_name hot_fields this_item_id %}
+	{% endif %}
+	
 {% endblock %}
+
+{% if hot %}
+	{% block extra_js %}
+		{{ block.super }}
+		{% hot_render_js %}
+	{% endblock %}
+{% endif %}

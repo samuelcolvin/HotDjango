@@ -114,6 +114,15 @@ class DisplayItem(viewb.TemplateBase):
 			links.append({'url': reverse('delete_item', args=[self._app_name, self._model_name, self._item.id]), 
 					  'name': 'Delete ' + self._single_t, 'classes': 'confirm-follow', 
                       'msg': 'Are you sure you wish to delete this item?'})
+		if hasattr(self._disp_model, 'related_tables'):
+			self._context['hot'] = True
+			self._context['app_name'] = self._app_name
+			self._context['model_name'] = self._model_name
+			field_names = self._disp_model.related_tables.keys()
+			self._context['hot_fields'] = ','.join(field_names)
+			self._context['this_item_id'] = self._item_id
+			for field_name in field_names:
+				links.append({'onclick': "edit_related('%s')" % field_name,  'name': 'Edit ' + field_name})
 		return links
 		
 	def _populate_fields(self, item, dm, exceptions=[]):
