@@ -11,6 +11,7 @@ from django.core.urlresolvers import reverse
 from django.db.models.query import QuerySet
 import markdown2
 import django.forms as forms
+import HotDjango
 
 def logout(request):
 	auth_logout(request)
@@ -122,7 +123,8 @@ class DisplayItem(viewb.TemplateBase):
 			self._context['hot_fields'] = ','.join(field_names)
 			self._context['this_item_id'] = self._item_id
 			for field_name in field_names:
-				links.append({'onclick': "edit_related('%s')" % field_name,  'name': 'Edit ' + field_name})
+				links.append({'onclick': "edit_related('%s')" % field_name,  
+							'name': 'Edit ' + HotDjango.get_verbose_name(self._disp_model, field_name)})
 		return links
 		
 	def _populate_fields(self, item, dm, exceptions=[]):

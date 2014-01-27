@@ -11,13 +11,18 @@ class HotEdit(viewb.TemplateBase):
     side_menu = False
     
     def setup_context(self, **kw):
+        if 'view_settings' in self.request.session:
+            self.view_settings = viewb.SK_VIEW_SETTINGS.copy()
+            if hasattr(settings, 'SK_VIEW_SETTINGS'):
+                self.view_settings.update(settings.SK_VIEW_SETTINGS)
+            self.view_settings.update(self.request.session['view_settings'])
         super(HotEdit, self).setup_context(**kw)
         if 'extra_context' in self.request.session:
             self._context.update(self.request.session['extra_context'])
 
     def get_context_data(self, **kw):
         self.set_crums(add = [{'url': '', 'name': 'Mass Edit'}])
-        self._context['title'] = 'Mass Editor'
+#         self._context['title'] = 'Mass Editor'
         self._top_active = 'display_index'
         self._context['app_name'] = self._app_name
         self._context['model_name'] = self._model_name

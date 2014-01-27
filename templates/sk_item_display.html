@@ -1,13 +1,13 @@
 {% extends base_template %}
 
-{% if hot %}
 	{% load HotDjangoTags %}
 	
-	{% block extra_css %}
-		{{ block.super }}
+{% block extra_css %}
+	{{ block.super }}
+	{% if hot %}
 		{% hot_render_css %}
-	{% endblock %}
-{% endif %}
+	{% endif %}
+{% endblock %}
 
 {% block content %}
 	{% for group in status_groups %}
@@ -33,9 +33,9 @@
 	
 {% endblock %}
 
-{% if hot %}
-	{% block extra_js %}
-		{{ block.super }}
+{% block extra_js %}
+	{{ block.super }}
+	{% if hot %}
 		{% hot_render_js %}
-	{% endblock %}
-{% endif %}
+	{% endif %}
+{% endblock %}
