@@ -84,6 +84,7 @@ class DisplayModel(viewb.TemplateBase):
 
 class DisplayItem(viewb.TemplateBase):
 	template_name = 'sk_item_display.html'
+	_hot_added = False
 	
 	def get_context_data(self, **kw):
 		self._context['page_menu'] = self.set_links()
@@ -116,16 +117,30 @@ class DisplayItem(viewb.TemplateBase):
 					  'name': 'Delete ' + self._single_t, 'classes': 'confirm-follow', 
                       'msg': 'Are you sure you wish to delete this item?'})
 		if hasattr(self._disp_model, 'related_tables'):
-			self._context['hot'] = True
-			self._context['app_name'] = self._app_name
-			self._context['model_name'] = self._model_name
 			field_names = self._disp_model.related_tables.keys()
-			self._context['hot_fields'] = ','.join(field_names)
-			self._context['this_item_id'] = self._item_id
+			self._add_hot(field_names)
 			for field_name in field_names:
 				links.append({'onclick': "edit_related('%s')" % field_name,  
 							'name': 'Edit ' + HotDjango.get_verbose_name(self._disp_model, field_name)})
+		if hasattr(self._disp_model, 'HotTable'):
+			for field_name in self._disp_model.HotTable.Meta.fields:
+				dj_field = self._disp_model.model._meta.get_field_by_name(field_name)[0]
+				if isinstance(dj_field, models.ManyToManyField):
+					links.append({'onclick': "edit_m2m('%s')" % field_name,  
+								'name': 'Edit ' + HotDjango.get_verbose_name(self._disp_model, field_name)})
+					self._add_hot([field_name])
 		return links
+	
+	def _add_hot(self, field_names):
+		if self._hot_added:
+			self._context['hot_fields'] += ',' + ','.join(field_names)
+			return
+		self._context['hot'] = True
+		self._context['app_name'] = self._app_name
+		self._context['model_name'] = self._model_name
+		self._context['this_item_id'] = self._item_id
+		self._context['hot_fields'] = ','.join(field_names)
+		self._hot_added = True
 		
 	def _populate_fields(self, item, dm, exceptions=[]):
 		item_fields=[]
