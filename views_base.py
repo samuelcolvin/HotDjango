@@ -187,10 +187,12 @@ def basic_context(request, top_active = None):
         else:
             raw_menu.append(item)
     if request.user.is_staff:
-        raw_menu.append({'url': 'admin:index', 'name': 'Staff Admin'})
+        raw_menu.append({'url': 'admin:index', 'name': 'Staff Admin', 'glyph':'wrench'})
     top_menu = []
     for item in raw_menu:
         menu_item = {'url': reverse(item['url']), 'name': item['name']}
+        if 'glyph' in item:
+            menu_item['glyph'] = item['glyph']
         if item['url'] == top_active:
             menu_item['class'] = 'active'
         top_menu.append(menu_item)

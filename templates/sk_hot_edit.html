@@ -5,6 +5,8 @@
 {% block extra_css %}
 	{{ block.super }}
 	{% hot_render_css %}
+	{% load staticfiles %}
+	<link rel="stylesheet" href="{% static "hot/css/table-style-page.css" %}">
 {% endblock %}
 
 {% block content %}

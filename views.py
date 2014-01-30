@@ -121,13 +121,13 @@ class DisplayItem(viewb.TemplateBase):
 			self._add_hot(field_names)
 			for field_name in field_names:
 				links.append({'onclick': "edit_related('%s')" % field_name,  
-							'name': 'Edit ' + HotDjango.get_verbose_name(self._disp_model, field_name)})
+							'name': 'Edit Associated ' + HotDjango.get_verbose_name(self._disp_model, field_name)})
 		if hasattr(self._disp_model, 'HotTable'):
 			for field_name in self._disp_model.HotTable.Meta.fields:
 				dj_field = self._disp_model.model._meta.get_field_by_name(field_name)[0]
 				if isinstance(dj_field, models.ManyToManyField):
 					links.append({'onclick': "edit_m2m('%s')" % field_name,  
-								'name': 'Edit ' + HotDjango.get_verbose_name(self._disp_model, field_name)})
+								'name': 'Edit Associated ' + HotDjango.get_verbose_name(self._disp_model, field_name)})
 					self._add_hot([field_name])
 		return links
 	
