@@ -85,6 +85,7 @@ class DisplayModel(viewb.TemplateBase):
 class DisplayItem(viewb.TemplateBase):
 	template_name = 'sk_item_display.html'
 	_hot_added = False
+	custom_tables_below = False
 	
 	def get_context_data(self, **kw):
 		self._context['page_menu'] = self.set_links()
@@ -97,14 +98,14 @@ class DisplayItem(viewb.TemplateBase):
 				status_groups.append({'title': field.verbose_name, 'fields': self._populate_fields(model, self._apps[self._app_name][model_name])})
 		
 		self._context['status_groups'] = status_groups
-		
+# 		if not self.custom_tables_below:
 		self._context['tables_below'] = self._populate_tables(self._item, self._disp_model)
 		
 		name = str(self._disp_model.model.objects.get(id=int(self._item_id)))
 		self.set_crums(add = [{'url': 
 		                    reverse(self.viewname, args=self.args_base(model = self._model_name) + [int(self._item_id)]), 'name': name}])
-		
-		title = '%s: %s' %  (self._single_t, str(self._item))
+		print self._single_t, self._item
+		title = '%s: %s' %  (self._single_t, self._item.__unicode__())
 		self._context['title'] = title
 		return self._context
 	

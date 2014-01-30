@@ -56,7 +56,7 @@ class Table(tables.Table):
         self._url_base = reverse(self.viewname, args=url_args)
         
         if self.apps is None:
-            self.apps = get_display_apps()
+            self.apps, _ = get_display_apps()
         super(Table, self).__init__(*args, **kw)
     
 class SelfLinkColumn(tables.Column):

@@ -36,7 +36,7 @@ class ViewBase(object):
             if hasattr(settings, 'SK_VIEW_SETTINGS'):
                 self.view_settings.update(settings.SK_VIEW_SETTINGS)
         self.viewname = self.view_settings['viewname']
-        self._apps = SkeletalDisplay.get_display_apps()
+        self._apps, self._extra_render = SkeletalDisplay.get_display_apps()
         self._disp_model = None
         self._app_name = kw.get('app', None)
         self._model_name = kw.get('model', None)
@@ -50,6 +50,8 @@ class ViewBase(object):
             self._item = self._disp_model.model.objects.get(id = int(self._item_id))
         if not hasattr(self, '_context'):
             self._context={}
+        if self._extra_render:
+            self._context.update(self._extra_render(self.request))
         self.create_crums()
         if self.side_menu:
             self.generate_side_menu()
