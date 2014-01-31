@@ -104,7 +104,6 @@ class DisplayItem(viewb.TemplateBase):
 		name = str(self._disp_model.model.objects.get(id=int(self._item_id)))
 		self.set_crums(add = [{'url': 
 		                    reverse(self.viewname, args=self.args_base(model = self._model_name) + [int(self._item_id)]), 'name': name}])
-		print self._single_t, self._item
 		title = '%s: %s' %  (self._single_t, self._item.__unicode__())
 		self._context['title'] = title
 		return self._context
