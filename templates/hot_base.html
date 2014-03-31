@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>{{title}}</title>
+		{% load staticfiles %}
+		<link rel="icon" type="image/png" href="{% static "favicon.png" %}" />
+		{% if debug %}
+		<link rel="stylesheet" href="{% static "lib/css/bootstrap.css" %}">
+		<link rel="stylesheet" href="{% static "lib/css/bootstrap-theme.css" %}">
+		{% else %}
+		<link rel="stylesheet" href="{% static "lib/css/bootstrap.min.css" %}">
+		<link rel="stylesheet" href="{% static "lib/css/bootstrap-theme.min.css" %}">
+		{% endif %}
+		{% block extra_css %}{% endblock %}
+	</head>
+	<body>
+		<div class="navbar navbar-inverse navbar-fixed-top">
+		  <div class="container">
+		    <div class="navbar-header">
+		      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+		        {% for item in menu %}<span class="icon-bar"></span>{% endfor %}
+		      </button>
+		      <a class="navbar-brand" href="{% url "all-hot-table" %}">Django-Handsontable</a>
+		    </div>
+		    <div class="navbar-collapse collapse">
+		      <ul class="nav navbar-nav">
+		        {% for item in menu %}
+				<li><a href="{{item.url}}">{{item.name}}</a></li>
+				{% endfor %}
+		      </ul>
+		    </div><!--/.navbar-collapse -->
+		  </div>
+		</div>
+		<div class="container" style="margin-top: 60px">
+		  <div class="col-xs-12">
+			{% block content %}{% endblock %}
+		  </div> <!-- main row-->
+		</div>
+		{% if debug %}
+		<script src="{% static "lib/js/jquery-1.11.0.js" %}"></script>
+		<script src="{% static "lib/js/bootstrap.js" %}"></script>
+		{% else %}
+		<script src="{% static "lib/js/jquery-1.11.0.min.js" %}"></script>
+		<script src="{% static "lib/js/bootstrap.min.js" %}"></script>
+		{% endif %}
+		{% block extra_js %}{% endblock %}
+	</body>
+</html>

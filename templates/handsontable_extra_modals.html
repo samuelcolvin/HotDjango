@@ -1,0 +1,67 @@
+<div id="extra-table-big" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog big-modal">
+      <div id="extra-table-big" class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Secondary Table</h4>
+        </div>
+        <div class="modal-body table-modal">
+			<div class="row msg-warning">
+				<div id="extra-message" class="alert alert-info">Loading...</div>
+				<pre id="error" class="alert alert-danger" style="display: none;"></pre>
+			</div>
+			<div class="start-hidden" class="row big-table">
+				<div id="hot-table" class="handsontable"></div>
+			</div>
+        </div>
+        <div class="modal-footer">
+			<div class="btn-group">
+		          <button id="savebtn" class="btn btn-primary">Save changes</button>
+				  <button id="loadbtn" class="btn btn-default">Load Data from Server</button>
+		          <button id="done" class="btn btn-default" data-dismiss="modal">Done</button>
+			</div>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div id="extra-table" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div id="extra-table" class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Secondary Table</h4>
+        </div>
+        <div class="modal-body">
+			<div class="row small-table">
+				<div id="hot-table" class="handsontable"></div>
+			</div>
+        </div>
+        <div class="modal-footer">
+			<div class="btn-group">
+	          <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+	          <button id="done" class="btn btn-primary" data-dismiss="modal">Update</button>
+          	</div>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<div id="prompt" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" onclick="$('#prompt').modal('hide')" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Confirm Modifications</h4>
+        </div>
+        <div class="modal-body" id="prompt-content"></div>
+        <div class="modal-footer">
+			<div class="btn-group">
+	          <button class="btn btn-default" data-dismiss="modal" onclick="$('#prompt').modal('hide')">Cancel</button>
+	          <button id="prompt-do" type="button" class="btn btn-primary" data-dismiss="modal">Do</button>
+          	</div>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
