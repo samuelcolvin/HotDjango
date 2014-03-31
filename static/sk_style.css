@@ -1,0 +1,55 @@
+.main-container{
+	background-color: white;
+	padding-top: 90px;
+	padding-bottom: 100px;
+}
+
+body{
+	background-color: #eee;
+}
+
+tbody tr:hover {
+  background-color: #f0f0f0;
+}
+
+.well {
+	background-image: none;
+}
+
+.alert p{
+	margin: 0px !important;
+}
+
+.field-display{
+	min-height: 120px;
+}
+
+.nav .open > a, .nav .open > a:hover, .nav .open > a:focus {
+	background-color: #e0e0e0;
+}
+
+.centered{
+    float: none;
+    margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .dl-horizontal dt {
+    width: 200px;
+  }
+  .dl-horizontal dd {
+    margin-left: 220px;
+  }
+}
+
+.form-group select[multiple] {
+    height: 400px;
+}
+
+.item-display img{
+	border: solid 1px black;
+}
+
+.filter-form label{
+	display: none;
+}

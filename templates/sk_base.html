@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="">
+		<meta name="author" content="">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"> 
+		{% block extra_meta %}{% endblock %}
+		<title>{{title}}</title>
+		{% load staticfiles %}
+		<link rel="icon" type="image/png" href="{% static "favicon.png" %}" />
+		{% if debug %}
+		<link rel="stylesheet" href="{% static "lib/css/bootstrap.css" %}">
+		<link rel="stylesheet" href="{% static "lib/css/bootstrap-theme.css" %}">
+		<link rel="stylesheet" href="{% static "sk_style.css" %}?">
+		{% else %}
+		<link rel="stylesheet" href="{% static "lib/css/bootstrap.min.css" %}">
+		<link rel="stylesheet" href="{% static "lib/css/bootstrap-theme.min.css" %}">
+		<link rel="stylesheet" href="{% static "sk_style.css" %}">
+		{% endif %}
+		{% block extra_css %}{% endblock %}
+	</head>
+	<body>
+		{% block body %}{% endblock %}
+		{% if debug %}
+		<script src="{% static "lib/js/jquery-1.11.0.js" %}"></script>
+		<script src="{% static "lib/js/bootstrap.js" %}"></script>
+		<script src="{% static "lib/js/bootbox.js" %}"></script>
+		<script src="{% static "js/general.js" %}?"></script>
+		{% else %}
+		<script src="{% static "lib/js/jquery-1.11.0.min.js" %}"></script>
+		<script src="{% static "lib/js/bootstrap.min.js" %}"></script>
+		<script src="{% static "lib/js/bootbox.min.js" %}"></script>
+		<script src="{% static "js/general.js" %}"></script>
+		{% endif %}
+		{% block extra_js %}{% endblock %}
+		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		  <script src="{% static "lib/js/html5shiv.js" %}"></script>
+		  <script src="{% static "lib/js/respond.min.js" %}"></script>
+		<![endif]-->
+	</body>
+</html>

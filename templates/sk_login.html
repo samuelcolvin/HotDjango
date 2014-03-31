@@ -1,0 +1,20 @@
+{% extends "sk_base.html" %}
+
+{% block title %}Login{% endblock title %}
+
+{% load staticfiles %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static "sk_login_styles.css" %}?">
+{% endblock extra_css %}
+
+{% block body %}
+<div class="container">
+	<form method="post" class="form-signin">
+		<h2 class="form-signin-heading">Login</h2>
+		{% csrf_token %}
+		{% load bootstrap %}
+		{{ form|bootstrap }}
+	    <button class="btn btn-lg btn-primary btn-block" type="submit">login</button>
+	</form>
+</div> <!-- /container -->
+{% endblock %}

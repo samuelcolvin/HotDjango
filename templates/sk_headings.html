@@ -1,0 +1,60 @@
+{% if side_menu %}
+	<div class="col-md-3 col-md-push-9 hidden-print" id="sidebar" role="navigation">
+	  <div class="well sidebar-nav">
+	    <ul class="nav">
+			{% for item in side_menu %}
+			<li class="{{item.class}}"><a href="{{item.url}}">{{item.name}}</a></li>
+			{% endfor %}
+	    </ul>
+	  </div><!--/.well -->
+	</div><!--/sidebar-->
+{% endif %}
+<div class="{% if side_menu %}col-md-9 col-md-pull-3{% else %}col-md-12{% endif %}">
+	{% if crums %}
+	<ol class="breadcrumb">
+		{% for item in crums %}
+		{% if forloop.last %} <li class="active"> {{item.name}} </li>
+		{% else %} <li> <a href="{{item.url}}">{{item.name}}</a> </li> {% endif %}
+		{% endfor %}
+	</ol>
+	{% endif %}
+	
+	{% if success %}
+	<div class="alert alert-success">
+		{% for s in success %} <p> {{s}} </p> {% endfor %}
+	</div>
+	{% else %}
+	<div class="alert alert-success" style="display:none"></div>
+	{% endif %}
+	
+	{% if info %}
+	<div class="alert alert-info">
+		{% for info_i in info %} <p> {{info_i}} </p> {% endfor %}
+	</div>
+	{% else %}
+	<div class="alert alert-info" style="display:none"></div>
+	{% endif %}
+	
+	{% if errors %}
+	<div class="alert alert-danger">
+		{% for error in errors %} <p> {{error}} </p> {% endfor %}
+	</div>
+	{% else %}
+	<div class="alert alert-danger" style="display:none"></div>
+	{% endif %}
+	
+	
+	{% if page_menu %}
+	<div id="page-menu" class="hidden-print">
+		{% for item in page_menu %}
+			{% if item.url %}
+				<a href="{{item.url}}" class="btn btn-default {{item.classes}}" msg="{{ item.msg }}">{{item.name}}</a>
+			{% elif item.onclick %}
+				<button type="button" class="btn btn-default" onclick="{{item.onclick|safe}}">{{item.name}}</button>
+			{% endif %}
+		{% endfor %}
+	</div>
+	{% endif %}
+	<div>
+		<h4>{{title}}</h4>
+	</div>

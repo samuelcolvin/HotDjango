@@ -1,0 +1,41 @@
+{% extends base_template %}
+
+	{% load HotDjangoTags %}
+	
+{% block extra_css %}
+	{{ block.super }}
+	{% if hot %}
+		{% hot_render_css %}
+	{% endif %}
+{% endblock %}
+
+{% block content %}
+	{% for group in status_groups %}
+		{% if group.title %}<strong>{{group.title}}</strong>{% endif %}
+		<dl class="dl-horizontal item-display">
+			{% for item in group.fields %}
+		    	<dt>{{item.name}}</dt>
+				<dd>{{item.state|safe}}</dd>
+			{% endfor %}
+		</dl>
+	{% endfor %}
+	{{ extra_content|safe }}
+	{% if tables_below %}
+		{% load render_table from django_tables2 %}
+		{% for table in tables_below %}
+			<h3>{{table.title}}</h3>
+			{% render_table table.renderable %}
+		{% endfor %}
+	{% endif %}
+	{% if hot %}
+		{% hot_render_extra app_name model_name hot_fields this_item_id %}
+	{% endif %}
+	
+{% endblock %}
+
+{% block extra_js %}
+	{{ block.super }}
+	{% if hot %}
+		{% hot_render_js %}
+	{% endif %}
+{% endblock %}
