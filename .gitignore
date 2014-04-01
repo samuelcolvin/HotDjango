@@ -51,4 +51,6 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+# added by me
 /static/lib
