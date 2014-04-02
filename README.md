@@ -2,6 +2,8 @@
 django-hot
 ==========
 
+**Currently a work in progress as [django-skeletal-display](https://github.com/samuelcolvin/django-skeletal-display) and [django-handsontable](https://github.com/samuelcolvin/django-handsontable) are combined.**
+
 Django app for displaying data - like the admin interface, but pretty and for displaying as well as editing data
 
 App uses django-tables2 (https://github.com/bradleyayers/django-tables2) to provide a simple dispaly of defined apps.

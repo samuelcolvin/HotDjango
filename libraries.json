@@ -1,5 +1,5 @@
 {
-  "target": "static/lib",
+  "target": "static/hot_libs",
   "libs":
   {
     "http://code.jquery.com/jquery-1.11.0.js": "js/{{ filename }}",
