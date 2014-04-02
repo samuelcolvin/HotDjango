@@ -3,7 +3,7 @@
 {% block extra_css %}
 	{{ block.super }}
 	{% load staticfiles %}
-	<link rel="stylesheet" href="{% static "lib/css/nv.d3.min.css" %}">
+	<link rel="stylesheet" href="{% static "hot_libs/css/nv.d3.min.css" %}">
 {% endblock %}
 
 {% block content %}
@@ -18,11 +18,11 @@
 {% block extra_js %}
 	{{ block.super }}
 	{% if debug %}
-	<script src="{% static "lib/js/d3.v3.js" %}"></script>
-	<script src="{% static "lib/js/nv.d3.js" %}"></script>
+	<script src="{% static "hot_libs/js/d3.v3.js" %}"></script>
+	<script src="{% static "hot_libs/js/nv.d3.js" %}"></script>
 	{% else %}
-	<script src="{% static "lib/js/d3.v3.min.js" %}"></script>
-	<script src="{% static "lib/js/nv.d3.min.js" %}"></script>
+	<script src="{% static "hot_libs/js/d3.v3.min.js" %}"></script>
+	<script src="{% static "hot_libs/js/nv.d3.min.js" %}"></script>
 	{% endif %}
 	<script src="{% static "hot/js/chart.js" %}?"></script>
 {% endblock %}
