@@ -1,13 +1,16 @@
 from rest_framework import serializers
-import inspect, settings
-import inspect, json
+import inspect, json, imp, os
+import settings
 import django_tables2 as tables
 from django.utils.safestring import mark_safe
 from django.utils.html import escape
 from django_tables2.utils import A
 from django.core.urlresolvers import reverse
 
-__version__ = '0.2'
+HOT_URL_NAME = 'hot_display'
+
+class HotDisplayError(Exception):
+    pass
 
 HOT_ID_IN_MODEL_STR = False
 if hasattr(settings, 'HOT_ID_IN_MODEL_STR'):
@@ -82,11 +85,14 @@ def get_verbose_name(dm, field_name):
 
 def get_all_apps():
     importer = lambda m: __import__(m, globals(), locals(), ['display'], -1)
-    display_modules = map(importer, settings.DISPLAY_APPS)
     apps={}
     extra_render = None
-    for app in display_modules:
-        app_name = app.display.app_name
+    for app_name in settings.DISPLAY_APPS:
+        disp_path = os.path.join(app_name, 'display.py')
+        assert os.path.exists(os.path.join(settings.REL_SITE_ROOT, disp_path)), '%s does not exist' % disp_path
+        app = importer(app_name)
+        if hasattr(app.display, 'AppName'):
+            app_name = app.display.app_name
         apps[app_name] = {}
         if extra_render == None:
             extra_render = getattr(app.display, 'extra_render', None)
@@ -124,10 +130,6 @@ def is_allowed_hot(user, permitted_groups=None):
         if group in permitted_groups:
             return True
     return False
-
-
-
-
 
 class _MetaModelDisplay(_MetaBaseDisplayModel):
     def __init__(cls, *args, **kw):

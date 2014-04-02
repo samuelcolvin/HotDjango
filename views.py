@@ -1,32 +1,32 @@
-<<<<<<< HEAD
 from django.utils.encoding import smart_str
 from datetime import datetime
 import settings
 from django.db import models
-import SkeletalDisplay
 from django.contrib.auth import logout as auth_logout
 from django.http import HttpResponseRedirect
-import SkeletalDisplay.views_base as viewb
+import views_base as viewb
 import django.contrib.auth.views
 from django.core.urlresolvers import reverse
 from django.db.models.query import QuerySet
 import markdown2
 import django.forms as forms
-import HotDjango
+import public
+import django.views.generic as generic
+from django.core.context_processors import csrf
 
 def logout(request):
 	auth_logout(request)
 	return HttpResponseRedirect(settings.LOGIN_URL)
 
 def login(*args):
-	template = 'sk_login.html'
+	template = 'hot/login.html'
 	if hasattr(settings, 'LOGIN_TEMPLATE'):
 		template = settings.LOGIN_TEMPLATE
 	kw = {'template_name': template}
 	return django.contrib.auth.views.login(*args, **kw)
 
 class Index(viewb.TemplateBase):
-	template_name = 'sk_index.html'
+	template_name = 'hot/index.html'
 	side_menu = False
 	all_auth_permitted = True
 	
@@ -46,7 +46,7 @@ class FilterForm(forms.Form):
 		self.fields['filter'] = forms.ChoiceField(choices=choices, initial = initial)
 
 class DisplayModel(viewb.TemplateBase):
-	template_name = 'sk_model_display.html'
+	template_name = 'hot/model_display.html'
 	_base_queryset = None
 	
 	def get_context_data(self, **kw):
@@ -84,7 +84,7 @@ class DisplayModel(viewb.TemplateBase):
 		return links
 
 class DisplayItem(viewb.TemplateBase):
-	template_name = 'sk_item_display.html'
+	template_name = 'hot/item_display.html'
 	_hot_added = False
 	custom_tables_below = False
 	
@@ -122,13 +122,13 @@ class DisplayItem(viewb.TemplateBase):
 			self._add_hot(field_names)
 			for field_name in field_names:
 				links.append({'onclick': "edit_related('%s')" % field_name,  
-							'name': 'Edit Associated ' + HotDjango.get_verbose_name(self._disp_model, field_name)})
+							'name': 'Edit Associated ' + public.get_verbose_name(self._disp_model, field_name)})
 		if hasattr(self._disp_model, 'HotTable'):
 			for field_name in self._disp_model.HotTable.Meta.fields:
 				dj_field = self._disp_model.model._meta.get_field_by_name(field_name)[0]
 				if isinstance(dj_field, models.ManyToManyField):
 					links.append({'onclick': "edit_m2m('%s')" % field_name,  
-								'name': 'Edit Associated ' + HotDjango.get_verbose_name(self._disp_model, field_name)})
+								'name': 'Edit Associated ' + public.get_verbose_name(self._disp_model, field_name)})
 					self._add_hot([field_name])
 		return links
 	
@@ -213,7 +213,7 @@ class DisplayItem(viewb.TemplateBase):
 			return smart_str(value)
 				
 	def _find_model(self, to_find):
-		return SkeletalDisplay.find_model(self._apps, to_find, self._app_name)
+		return public.find_model(self._apps, to_find, self._app_name)
 	
 	def _find_base(self, value):
 		if value > 1e3:
@@ -224,7 +224,7 @@ class DisplayItem(viewb.TemplateBase):
 			return '%d' % value
 
 class TextDisplay(viewb.TemplateBase):
-	template_name = 'sk_text_page.html'
+	template_name = 'hot/text_page.html'
 	side_menu = False
 	all_auth_permitted = True
 	body = ''
@@ -245,7 +245,7 @@ class UserDisplay(DisplayItem):
 	side_menu = False
 	
 	def setup_context(self, **kw):
-		kw['app'] = 'sk'
+		kw['app'] = public.HOT_URL_NAME
 		kw ['model'] = 'User'
 		kw['id'] = str(self.request.user.id)
 		super(UserDisplay, self).setup_context(**kw)
@@ -255,11 +255,7 @@ class UserDisplay(DisplayItem):
 		links += super(UserDisplay, self).set_links()
 		links.append({'url': reverse('logout'), 'name': 'Logout'})
 		return links
-=======
-import HotDjango
-import django.views.generic as generic
-from django.core.urlresolvers import reverse
-from django.core.context_processors import csrf
+# ======= hands-on-table original:
 
 class AllView(generic.TemplateView):
 
@@ -283,7 +279,7 @@ class TableView(generic.TemplateView):
     
 def base_context(request):
     context = {}
-    apps = HotDjango.get_rest_apps()
+    apps = public.get_rest_apps()
     context['menu'] = []
     for app_name, app in apps.iteritems():
         for model_name in app.keys():
@@ -293,4 +289,3 @@ def base_context(request):
                  'url': reverse('all-hot-table') + 'restful'})
     context.update(csrf(request))
     return context
->>>>>>> handsontable-original

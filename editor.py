@@ -1,13 +1,12 @@
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
-import SkeletalDisplay.views_base as viewb
+import views_base as viewb
 import django.views.generic.edit as generic_editor
 import django.forms.models as form_models
 import settings
-import SkeletalDisplay
 
 class HotEdit(viewb.TemplateBase):
-    template_name = 'sk_hot_edit.html'
+    template_name = 'hot/hot_edit.html'
     side_menu = False
     
     def setup_context(self, **kw):
@@ -29,7 +28,7 @@ class HotEdit(viewb.TemplateBase):
         return self._context
 
 class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_editor.ModelFormMixin, generic_editor.ProcessFormView): 
-    template_name = 'sk_add_edit.html'
+    template_name = 'hot/add_edit.html'
     action = 'Add'
     
     def _editing_self(self):

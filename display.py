@@ -4,7 +4,7 @@ import SkeletalDisplay
 from django.contrib.auth.models import User, Group
 import django.forms as forms
 
-app_name = 'sk'
+AppName = 'HotDisplay'
 
 class User(SkeletalDisplay.ModelDisplay):
     model = User

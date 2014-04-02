@@ -1,10 +1,13 @@
 from django.shortcuts import redirect
 import django.views.generic as generic
 import settings
-import SkeletalDisplay, HotDjango
+import public
 from django.core.urlresolvers import reverse
 
-SK_VIEW_SETTINGS = {'viewname': 'sk', 'args2include': [True, True], 'base_name': 'Model Display', 'top_active': 'sk'}
+SK_VIEW_SETTINGS = {'viewname': public.HOT_URL_NAME, 
+                    'args2include': [True, True], 
+                    'base_name': 'Model Display', 
+                    'top_active': public.HOT_URL_NAME}
     
 class ViewBase(object):
     side_menu = True
@@ -36,7 +39,7 @@ class ViewBase(object):
             if hasattr(settings, 'SK_VIEW_SETTINGS'):
                 self.view_settings.update(settings.SK_VIEW_SETTINGS)
         self.viewname = self.view_settings['viewname']
-        self._apps, self._extra_render = SkeletalDisplay.get_display_apps()
+        self._apps, self._extra_render = public.get_display_apps()
         self._disp_model = None
         self._app_name = kw.get('app', None)
         self._model_name = kw.get('model', None)
@@ -63,10 +66,10 @@ class ViewBase(object):
         self._context.update(basic_context(self.request, top_active))
         
     def is_allowed(self):
-        return HotDjango.is_allowed_hot(self.request.user)
+        return public.is_allowed_hot(self.request.user)
     
     def _get_default_names(self):
-        self._app_name = [app_name for app_name in self._apps.keys() if app_name != 'sk'][0]
+        self._app_name = [app_name for app_name in self._apps.keys() if app_name != public.HOT_URL_NAME][0]
         self._model_name = sorted(self._apps[self._app_name].values(), key=lambda model: model.index)[0].__name__
     
     def _get_model(self, app_name, model_name):
@@ -140,7 +143,7 @@ class TemplateBase(ViewBase, generic.TemplateView):
     pass
 
 class PermissionDenied(ViewBase, generic.TemplateView):
-    template_name = 'sk_simple_message.html'
+    template_name = 'hot/simple_message.html'
     side_menu = False
     all_auth_permitted = True
     show_crums = False
@@ -178,13 +181,13 @@ def basic_context(request, top_active = None):
         context['success'] = request.session.pop('success')
     if 'errors' in request.session:
         context['errors'] = request.session.pop('errors')
-    context['base_template'] = 'sk_page_base.html'
+    context['base_template'] = 'hot/page_base.html'
     if hasattr(settings, 'PAGE_BASE'):
         context['base_template'] = settings.PAGE_BASE
     raw_menu = []
     for item in settings.TOP_MENU:
         if 'groups' in item:
-            if HotDjango.is_allowed_hot(request.user, permitted_groups=item['groups']):
+            if public.is_allowed_hot(request.user, permitted_groups=item['groups']):
                 raw_menu.append(item)
         else:
             raw_menu.append(item)

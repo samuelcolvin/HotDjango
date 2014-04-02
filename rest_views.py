@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from rest_framework import permissions
-import HotDjango
+import public
 import settings
 import rest_framework.routers as routers
 from rest_framework.response import Response
@@ -17,7 +17,7 @@ import json
 class CustomIsAuthenticated(BasePermission):
     def has_permission(self, request, view):
         if request.user and request.user.is_authenticated():
-            return HotDjango.is_allowed_hot(request.user)
+            return public.is_allowed_hot(request.user)
         return False
 
 class ManyEnabledRouter(routers.DefaultRouter):
@@ -186,7 +186,7 @@ class ManyEnabledViewSet(viewsets.ModelViewSet):
     
     def _get_info(self):
         fields = []
-        self._all_apps = HotDjango.get_rest_apps()
+        self._all_apps = public.get_rest_apps()
         readonly = getattr(self._display_model.HotTable.Meta, 'readonly', [])
         for field_name in self._display_model.HotTable.Meta.fields:
             fields.append(self._get_field_info(field_name, field_name in readonly))
@@ -195,7 +195,7 @@ class ManyEnabledViewSet(viewsets.ModelViewSet):
     def _get_field_info(self, field_name, readonly):
         dm = self._display_model
         dj_field = dm.model._meta.get_field_by_name(field_name)[0]
-        verb_name = HotDjango.get_verbose_name(dm, field_name)
+        verb_name = public.get_verbose_name(dm, field_name)
         field = {'heading': verb_name, 'name': field_name, 'readonly': readonly or field_name == 'id'}
         field['type'] = dj_field.__class__.__name__
         if isinstance(dj_field, models.ForeignKey) or isinstance(dj_field, models.ManyToManyField):
@@ -217,14 +217,14 @@ class ManyEnabledViewSet(viewsets.ModelViewSet):
             name = item.hot_name()
         else:
             name = str(item)
-        if HotDjango.HOT_ID_IN_MODEL_STR:
+        if public.HOT_ID_IN_MODEL_STR:
             return name
         else:
             return '%d: %s' % (item.id, name)
 
 def generate_viewsets():
     modelviewsets = []
-    for app_name, app in HotDjango.get_rest_apps().items():
+    for app_name, app in public.get_rest_apps().items():
         for model_name, disp_model in app.items():
             props={'model': disp_model.model}
             props['serializer_class'] = disp_model.HotTable
