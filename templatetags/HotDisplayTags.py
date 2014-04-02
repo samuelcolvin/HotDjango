@@ -1,21 +1,22 @@
 from django import template
 from django.core.urlresolvers import reverse
-import HotDjango.rest_views as rest_views
-import HotDjango, json
+import HotDisplay.rest_views as rest_views
+import HotDisplay.public as public
+import json
 from django.db import models
 from rest_framework.reverse import reverse as rest_reverse
 
 register = template.Library()
 
-@register.tag(name='hot_render_full')
-def hot_render_full(parser, token):
+@register.tag(name='handsontable_render_full')
+def handsontable_render_full(parser, token):
     try:
         _, app_name, model_name = token.split_contents()
     except ValueError:
         raise template.TemplateSyntaxError('render_table_full tag requires exactly two arguments: app_name and model_name')
-    return HotTableMainNode(app_name, model_name)
+    return HandsOnTableMainNode(app_name, model_name)
 
-class HotTableMainNode(template.Node):
+class HandsOnTableMainNode(template.Node):
     def __init__(self, app_name, model_name):
         self.app_name = template.Variable(app_name)
         self.model_name = template.Variable(model_name)
@@ -27,16 +28,16 @@ class HotTableMainNode(template.Node):
         context['main_json_url'] = reverse(rest_views.generate_reverse(app_name, model_name) + '-list')
         return t.render(template.Context(context))
 
-@register.tag(name='hot_render_extra')
-def hot_render_extra(parser, token):
+@register.tag(name='handsontable_render_extra')
+def handsontable_render_extra(parser, token):
     try:
         _, app_name, model_name, field_names, this_id = token.split_contents()
     except ValueError:
-        raise template.TemplateSyntaxError('hot_render_extra tag requires exactly three arguments: '+ \
+        raise template.TemplateSyntaxError('handsontable_render_extra tag requires exactly three arguments: '+ \
                                            'app_name, model_name and comma seperated list of fields')
-    return HotTableExtraNode(app_name, model_name, field_names, this_id)
+    return HandsOnTableExtraNode(app_name, model_name, field_names, this_id)
 
-class HotTableExtraNode(template.Node):
+class HandsOnTableExtraNode(template.Node):
     def __init__(self, app_name, model_name, field_names, this_id):
         self.app_name = template.Variable(app_name)
         self.model_name = template.Variable(model_name)
@@ -48,13 +49,13 @@ class HotTableExtraNode(template.Node):
         app_name = self.app_name.resolve(context)
         model_name = self.model_name.resolve(context)
         this_id = int(self.id.resolve(context))
-        dm = HotDjango.get_rest_apps()[app_name][model_name]
+        dm = public.get_rest_apps()[app_name][model_name]
         extra_urls = {}
         field_names = [f.strip() for f in self.field_names.resolve(context).split(',')]
         for field_name in field_names:
             dj_field = dm.model._meta.get_field_by_name(field_name)[0]
             extra_urls[field_name] = {}
-            extra_urls[field_name]['heading'] = HotDjango.get_verbose_name(dm, field_name) 
+            extra_urls[field_name]['heading'] = public.get_verbose_name(dm, field_name) 
             if isinstance(dj_field, models.ManyToManyField):
                 other_model_name = dj_field.rel.to.__name__
                 extra_urls[field_name]['field'] = field_name
@@ -72,13 +73,18 @@ class HotTableExtraNode(template.Node):
         return t.render(template.Context(context))
 
 @register.simple_tag
-def _hot_render_extra_modals():
+def _handsontable_render_extra_modals():
     return template.loader.render_to_string('handsontable_extra_modals.html')
     
 @register.simple_tag
-def hot_render_js():
+def handsontable_render_js():
     return template.loader.render_to_string('hot_js.html')
     
 @register.simple_tag
-def hot_render_css():
+def handsontable_render_css():
     return template.loader.render_to_string('hot_css.html')
+
+@register.inclusion_tag('hot/headings.html', takes_context=True)
+def hot_headings(context):
+    return context
+    

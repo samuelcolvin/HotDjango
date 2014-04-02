@@ -1,11 +1,11 @@
 {% extends base_template %}
 
-	{% load HotDjangoTags %}
+	{% load HotDisplayTags %}
 	
 {% block extra_css %}
 	{{ block.super }}
 	{% if hot %}
-		{% hot_render_css %}
+		{% handsontable_render_css %}
 	{% endif %}
 {% endblock %}
 
@@ -28,7 +28,7 @@
 		{% endfor %}
 	{% endif %}
 	{% if hot %}
-		{% hot_render_extra app_name model_name hot_fields this_item_id %}
+		{% handsontable_render_extra app_name model_name hot_fields this_item_id %}
 	{% endif %}
 	
 {% endblock %}
@@ -36,6 +36,6 @@
 {% block extra_js %}
 	{{ block.super }}
 	{% if hot %}
-		{% hot_render_js %}
+		{% handsontable_render_js %}
 	{% endif %}
 {% endblock %}
