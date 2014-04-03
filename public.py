@@ -130,8 +130,8 @@ class SelfLinkColumn(tables.Column):
         if None in (table.viewname, table.reverse_args_base):
             return value
         else:
-            model_name = find_model(table.apps, record.__class__.__name__)[1]
-            url = table._url_base.replace('__mod_name__', model_name).replace('1234567', str(record.id))
+            disp_model_name = table.Meta.display_model.__name__
+            url = table._url_base.replace('__mod_name__', disp_model_name).replace('1234567', str(record.id))
             return mark_safe('<a href="%s">%s</a>' % (url, value))
     
 class SterlingPriceColumn(tables.Column):
@@ -200,17 +200,23 @@ class _MetaBaseDisplayModel(type):
 #                                                       'fields': dft_fields})
 
 class _MetaModelDisplay(_MetaBaseDisplayModel):
-    def __init__(cls, *args, **kw):
+    def __init__(cls, name, parents, extra, **kw):
         if cls.__name__ == 'ModelDisplay':
             return
-        assert hasattr(cls, 'model'), '%s is missing a model, all display models must have a model attribute.' % cls.__name__
+        if not hasattr(cls, 'model'):
+            app_name = extra['__module__'].split('.')[0]
+            app = __import__(app_name, globals(), locals(), ['models'], -1)
+            c_name = cls.__name__
+            if not hasattr(app.models, c_name):
+                raise HotDjangoError('%s is missing a model, and no model in %s has that name' % (c_name, app_name))
+            cls.model = getattr(app.models, c_name)
         cls.model_name = cls.model.__name__
         if hasattr(cls, 'DjangoTable'):
-            if hasattr(cls.DjangoTable, 'Meta'):
-                cls.DjangoTable.Meta.model = cls.model
+            cls.DjangoTable.Meta.model = cls.model
+            cls.DjangoTable.Meta.display_model = cls
             if len(cls.DjangoTable.base_columns) == 0:
                 cls.DjangoTable.base_columns['__unicode__'] = SelfLinkColumn(verbose_name='Name')
-        _MetaBaseDisplayModel.__init__(cls, *args, **kw)
+        _MetaBaseDisplayModel.__init__(cls, name, parents, extra, **kw)
 
 class ModelDisplay(BaseDisplayModel):
     __metaclass__ = _MetaModelDisplay
@@ -232,8 +238,6 @@ class ModelDisplay(BaseDisplayModel):
     
     class DjangoTable(Table):
         pass
-#         class Meta(ModelDisplayMeta):
-#             pass
 
 class _AppEncode(json.JSONEncoder):
     def default(self, obj):
@@ -241,7 +245,7 @@ class _AppEncode(json.JSONEncoder):
             return dir(obj)
         return json.JSONEncoder.default(self, dir(obj))
     
-def find_model(apps, to_find, this_app_name = None):
+def find_disp_model(apps, to_find, this_app_name = None):
     if this_app_name is not None:
         for model_name in apps[this_app_name].keys():
             if model_name == to_find:

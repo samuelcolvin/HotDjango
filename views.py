@@ -215,7 +215,7 @@ class DisplayItem(viewb.TemplateBase):
 			return smart_str(value)
 				
 	def _find_model(self, to_find):
-		return public.find_model(self._apps, to_find, self._app_name)
+		return public.find_disp_model(self._apps, to_find, self._app_name)
 	
 	def _find_base(self, value):
 		if value > 1e3:
