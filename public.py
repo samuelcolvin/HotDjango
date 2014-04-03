@@ -7,8 +7,9 @@ from django.utils.safestring import mark_safe
 from django.utils.html import escape
 from django_tables2.utils import A
 from django.core.urlresolvers import reverse
+import importlib
 
-HOT_URL_NAME = 'hot_display'
+HOT_URL_NAME = 'hot'
 
 class HotDjangoError(Exception):
     pass
@@ -72,20 +73,21 @@ def get_verbose_name(dm, field_name):
     return field_name
 
 def get_display_apps():
-    importer = lambda m: __import__(m, globals(), locals(), ['display'], -1)
+    importer = lambda m: importlib.import_module('%s.display' % m)
     apps={}
     extra_render = None
     for app_name in settings.DISPLAY_APPS:
         disp_path = os.path.join(app_name, 'display.py')
-        assert os.path.exists(os.path.join(settings.REL_SITE_ROOT, disp_path)), '%s does not exist' % disp_path
-        app = importer(app_name)
-        if hasattr(app.display, 'AppName'):
-            app_name = app.display.AppName
+        if not os.path.exists(os.path.join(settings.SITE_ROOT, disp_path)):
+            raise HotDjangoError('%s does not exist' % disp_path)
+        app_display = importer(app_name)
+        if hasattr(app_display, 'AppName'):
+            app_name = app_display.AppName
         apps[app_name] = {}
         if extra_render == None:
-            extra_render = getattr(app.display, 'extra_render', None)
-        for ob_name in dir(app.display):
-            ob = getattr(app.display, ob_name)
+            extra_render = getattr(app_display, 'extra_render', None)
+        for ob_name in dir(app_display):
+            ob = getattr(app_display, ob_name)
             if inherits_from(ob, 'BaseDisplayModel'):
                 apps[app_name][ob_name] = ob
                 apps[app_name][ob_name]._app_name = app_name

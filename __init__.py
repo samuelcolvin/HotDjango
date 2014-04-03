@@ -4,7 +4,7 @@ from public import *
 
 def _check_settings_attr(attr):
     if not hasattr(settings, attr):
-        raise HotDjangoError('settings has no attribute "%s"' % attr)
+        raise HotDjangoError('settings has no attribute "%s", this is required.' % attr)
 
 try:
     import settings
@@ -13,6 +13,6 @@ except ImportError:
 else:
     _check_settings_attr('DISPLAY_APPS')
     _check_settings_attr('SITE_TITLE')
-#     _check_settings_attr('TOP_MENU')
+    _check_settings_attr('SITE_ROOT')
     get_display_apps()
     
