@@ -13,11 +13,6 @@ except ImportError:
 else:
     _check_settings_attr('DISPLAY_APPS')
     _check_settings_attr('SITE_TITLE')
-    _check_settings_attr('TOP_MENU')
-    _check_settings_attr('INDEX_URL_NAME')
-    get_all_apps()
-    try:
-        _reverse(settings.INDEX_URL_NAME)
-    except:
-        raise HotDjangoError('url with name settings.INDEX_URL_NAME: "%s" not found.' % settings.INDEX_URL_NAME)
+#     _check_settings_attr('TOP_MENU')
+    get_display_apps()
     

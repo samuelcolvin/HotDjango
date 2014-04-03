@@ -11,9 +11,9 @@ class HotEdit(viewb.TemplateBase):
     
     def setup_context(self, **kw):
         if 'view_settings' in self.request.session:
-            self.view_settings = viewb.SK_VIEW_SETTINGS.copy()
-            if hasattr(settings, 'SK_VIEW_SETTINGS'):
-                self.view_settings.update(settings.SK_VIEW_SETTINGS)
+            self.view_settings = viewb.HOT_VIEW_SETTINGS.copy()
+            if hasattr(settings, 'HOT_VIEW_SETTINGS'):
+                self.view_settings.update(settings.HOT_VIEW_SETTINGS)
             self.view_settings.update(self.request.session['view_settings'])
         super(HotEdit, self).setup_context(**kw)
         if 'extra_context' in self.request.session:
@@ -42,9 +42,9 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
         
     def setup_context(self, **kw):
         if 'view_settings' in self.request.session:
-            self.view_settings = viewb.SK_VIEW_SETTINGS.copy()
-            if hasattr(settings, 'SK_VIEW_SETTINGS'):
-                self.view_settings.update(settings.SK_VIEW_SETTINGS)
+            self.view_settings = viewb.HOT_VIEW_SETTINGS.copy()
+            if hasattr(settings, 'HOT_VIEW_SETTINGS'):
+                self.view_settings.update(settings.HOT_VIEW_SETTINGS)
             self.view_settings.update(self.request.session['view_settings'])
         super(AddEditItem, self).setup_context(**kw)
         if 'extra_context' in self.request.session:

@@ -1,14 +1,14 @@
 import django_tables2 as tables
 from django_tables2.utils import A
-import SkeletalDisplay
+import public
 from django.contrib.auth.models import User, Group
 import django.forms as forms
 
 AppName = 'HotDjango'
 
-class User(SkeletalDisplay.ModelDisplay):
+class User(public.ModelDisplay):
     model = User
-    display = False
+#     display = False
     exclude=['password']
     addable = False
     editable = True
@@ -16,16 +16,19 @@ class User(SkeletalDisplay.ModelDisplay):
     attached_tables = [{'name':'Group', 'populate':'groups', 'title':'Groups'}]
     show_crums = False
     
+    class DjangoTable(public.Table):
+        username = public.SelfLinkColumn()
+        email = tables.Column()
+        first_name = tables.Column()
+        last_name = tables.Column()
+        class Meta(public.ModelDisplayMeta):
+            pass
+    
     class form(forms.ModelForm):
         class Meta:
             model = User
             fields = ('first_name', 'last_name', 'email')
 
-class Group(SkeletalDisplay.ModelDisplay):
+class Group(public.ModelDisplay):
     model = Group
-    display = False
-    
-    class DjangoTable(SkeletalDisplay.Table):
-        name = tables.Column()
-        class Meta(SkeletalDisplay.ModelDisplayMeta):
-            pass
+#     display = False

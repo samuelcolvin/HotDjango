@@ -22,7 +22,7 @@ class HandsOnTableMainNode(template.Node):
         self.model_name = template.Variable(model_name)
 
     def render(self, context):
-        t = template.loader.get_template('handsontable_main.html')
+        t = template.loader.get_template('hot/handsontable_main.html')
         app_name = self.app_name.resolve(context)
         model_name = self.model_name.resolve(context)
         context['main_json_url'] = reverse(rest_views.generate_reverse(app_name, model_name) + '-list')
@@ -45,7 +45,7 @@ class HandsOnTableExtraNode(template.Node):
         self.id = template.Variable(this_id)
 
     def render(self, context):
-        t = template.loader.get_template('handsontable_extra.html')
+        t = template.loader.get_template('hot/handsontable_extra.html')
         app_name = self.app_name.resolve(context)
         model_name = self.model_name.resolve(context)
         this_id = int(self.id.resolve(context))
@@ -74,15 +74,15 @@ class HandsOnTableExtraNode(template.Node):
 
 @register.simple_tag
 def _handsontable_render_extra_modals():
-    return template.loader.render_to_string('handsontable_extra_modals.html')
+    return template.loader.render_to_string('hot/handsontable_extra_modals.html')
     
 @register.simple_tag
 def handsontable_render_js():
-    return template.loader.render_to_string('hot_js.html')
+    return template.loader.render_to_string('hot/handsontable_js.html')
     
 @register.simple_tag
 def handsontable_render_css():
-    return template.loader.render_to_string('hot_css.html')
+    return template.loader.render_to_string('hot/handsontable_css.html')
 
 @register.inclusion_tag('hot/headings.html', takes_context=True)
 def hot_headings(context):

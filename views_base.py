@@ -4,7 +4,7 @@ import settings
 import public
 from django.core.urlresolvers import reverse
 
-SK_VIEW_SETTINGS = {'viewname': public.HOT_URL_NAME, 
+HOT_VIEW_SETTINGS = {'viewname': public.HOT_URL_NAME, 
                     'args2include': [True, True], 
                     'base_name': 'Model Display', 
                     'top_active': public.HOT_URL_NAME}
@@ -35,9 +35,9 @@ class ViewBase(object):
     
     def setup_context(self, **kw):
         if not hasattr(self, 'view_settings'):
-            self.view_settings = SK_VIEW_SETTINGS.copy()
-            if hasattr(settings, 'SK_VIEW_SETTINGS'):
-                self.view_settings.update(settings.SK_VIEW_SETTINGS)
+            self.view_settings = HOT_VIEW_SETTINGS.copy()
+            if hasattr(settings, 'HOT_VIEW_SETTINGS'):
+                self.view_settings.update(settings.HOT_VIEW_SETTINGS)
         self.viewname = self.view_settings['viewname']
         self._apps, self._extra_render = public.get_display_apps()
         self._disp_model = None
@@ -158,10 +158,11 @@ class PermissionDenied(ViewBase, generic.TemplateView):
     
     def setup_context(self, **kw):
         if 'view_settings' in self.request.session:
-            self.view_settings = SK_VIEW_SETTINGS.copy()
+            self.view_settings = HOT_VIEW_SETTINGS.copy()
             self.view_settings.update(self.request.session['view_settings'])
         super(PermissionDenied, self).setup_context(**kw)
-        del self._context['crums']
+        if 'crums' in self._context:
+            del self._context['crums']
 
 def get_plural_name(dm):
     return  unicode(dm.model._meta.verbose_name_plural)
@@ -184,13 +185,16 @@ def basic_context(request, top_active = None):
     context['base_template'] = 'hot/page_base.html'
     if hasattr(settings, 'PAGE_BASE'):
         context['base_template'] = settings.PAGE_BASE
+    if hasattr(settings, 'INDEX_URL_NAME'):
+        context['index'] = settings.INDEX_URL_NAME
     raw_menu = []
-    for item in settings.TOP_MENU:
-        if 'groups' in item:
-            if public.is_allowed_hot(request.user, permitted_groups=item['groups']):
+    if hasattr(settings, 'TOP_MENU'):
+        for item in settings.TOP_MENU:
+            if 'groups' in item:
+                if public.is_allowed_hot(request.user, permitted_groups=item['groups']):
+                    raw_menu.append(item)
+            else:
                 raw_menu.append(item)
-        else:
-            raw_menu.append(item)
     if request.user.is_staff:
         raw_menu.append({'url': 'admin:index', 'name': 'Staff Admin', 'glyph':'wrench'})
     top_menu = []
@@ -201,8 +205,8 @@ def basic_context(request, top_active = None):
         if item['url'] == top_active:
             menu_item['class'] = 'active'
         top_menu.append(menu_item)
-    
     context['top_menu'] = top_menu
+        
     context['site_title'] = settings.SITE_TITLE
     return context
 

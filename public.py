@@ -2,6 +2,7 @@ from rest_framework import serializers
 import inspect, json, imp, os
 import settings
 import django_tables2 as tables
+import django_tables2.tables as tables2_tables
 from django.utils.safestring import mark_safe
 from django.utils.html import escape
 from django_tables2.utils import A
@@ -16,21 +17,8 @@ HOT_ID_IN_MODEL_STR = False
 if hasattr(settings, 'HOT_ID_IN_MODEL_STR'):
     HOT_ID_IN_MODEL_STR = settings.HOT_ID_IN_MODEL_STR
 
-class _MetaBaseDisplayModel(type):
-    def __init__(cls, *args, **kw):
-        type.__init__(cls, *args, **kw)
-        if cls.__name__ in ('BaseDisplayModel', 'ModelDisplay'):
-            return
-        assert hasattr(cls, 'model'), '%s is missing a model, all display models must have a model attribute' % cls.__name__
-        cls.model_name = cls.model.__name__
-        if hasattr(cls, 'HotTable'):
-            if hasattr(cls.HotTable, 'Meta'):
-                cls.HotTable.Meta.model = cls.model
-            else:
-                cls.HotTable.Meta = type('Meta', (), {'model': cls.model})
-
 class BaseDisplayModel:
-    __metaclass__ = _MetaBaseDisplayModel
+    __metaclass__ = type
     verbose_names = {}
 
 class IDNameSerialiser(serializers.RelatedField):
@@ -83,7 +71,7 @@ def get_verbose_name(dm, field_name):
         return dm.verbose_names[field_name]
     return field_name
 
-def get_all_apps():
+def get_display_apps():
     importer = lambda m: __import__(m, globals(), locals(), ['display'], -1)
     apps={}
     extra_render = None
@@ -92,7 +80,7 @@ def get_all_apps():
         assert os.path.exists(os.path.join(settings.REL_SITE_ROOT, disp_path)), '%s does not exist' % disp_path
         app = importer(app_name)
         if hasattr(app.display, 'AppName'):
-            app_name = app.display.app_name
+            app_name = app.display.AppName
         apps[app_name] = {}
         if extra_render == None:
             extra_render = getattr(app.display, 'extra_render', None)
@@ -104,7 +92,7 @@ def get_all_apps():
     return apps, extra_render
 
 def get_rest_apps():
-    display_apps, _ = get_all_apps()
+    display_apps, _ = get_display_apps()
     for disp_app in display_apps.values():
         for model_name in disp_app.keys():
             if not hasattr(disp_app[model_name], 'HotTable'):
@@ -123,13 +111,82 @@ def is_allowed_hot(user, permitted_groups=None):
     if user.is_staff:
         return True
     if permitted_groups is None:
+        if not hasattr(settings, 'HOT_PERMITTED_GROUPS'):
+            return False
         permitted_groups = settings.HOT_PERMITTED_GROUPS
-        if permitted_groups is 'all':
-            return True
+    if permitted_groups == 'all-anon':
+        return True
+    if permitted_groups == 'all-users':
+        return not user.is_anonymous()
     for group in user.groups.all().values_list('name', flat=True):
         if group in permitted_groups:
             return True
     return False
+    
+class SelfLinkColumn(tables.Column):
+    def render(self, value, **kw):
+        record = kw['record']
+        table = kw['table']
+        if None in (table.viewname, table.reverse_args_base):
+            return value
+        else:
+            model_name = find_model(table.apps, record.__class__.__name__)[1]
+            url = table._url_base.replace('__mod_name__', model_name).replace('1234567', str(record.id))
+            return mark_safe('<a href="%s">%s</a>' % (url, value))
+    
+class SterlingPriceColumn(tables.Column):
+    def render(self, value):
+        if value>1000:
+            return '{:,}'.format(value)
+        elif value>10:
+            return '%0.2f' % value
+        else:
+            string = '%0.3f' % value
+            if string.endswith('0'):
+                return string[:-1]
+            return string
+    
+class ModelDisplayMeta(object):
+    orderable = False
+    attrs = {'class': 'table table-bordered table-condensed'}
+    per_page = 100
+    
+class _MetaTable(tables2_tables.DeclarativeColumnsMetaclass):
+    def __new__(mcs, name, bases, attrs):
+        if '__metaclass__' not in attrs and 'Meta' not in attrs:
+            attrs['Meta'] = type('Meta', (ModelDisplayMeta,), {})
+        return tables2_tables.DeclarativeColumnsMetaclass.__new__(mcs, name, bases, attrs)
+    
+class Table(tables.Table):   
+    __metaclass__ = _MetaTable 
+    def __init__(self, *args, **kw):
+        self.viewname= kw.pop('viewname', None)
+        self.reverse_args_base = kw.pop('reverse_args', None)
+        self.apps = kw.pop('apps', None)
+        self.use_model_arg = kw.pop('use_model_arg', True)
+        
+        url_args = list(self.reverse_args_base)
+        if self.use_model_arg:
+            url_args.append('__mod_name__')
+        url_args.append('1234567')
+        self._url_base = reverse(self.viewname, args=url_args)
+        
+        if self.apps is None:
+            self.apps, _ = get_display_apps()
+        super(Table, self).__init__(*args, **kw)
+
+class _MetaBaseDisplayModel(type):    
+    def __init__(cls, *args, **kw):
+        type.__init__(cls, *args, **kw)
+        if cls.__name__ in ('BaseDisplayModel', 'ModelDisplay'):
+            return
+        assert hasattr(cls, 'model'), '%s is missing a model, all display models must have a model attribute' % cls.__name__
+        cls.model_name = cls.model.__name__
+        if hasattr(cls, 'HotTable'):
+            if hasattr(cls.HotTable, 'Meta'):
+                cls.HotTable.Meta.model = cls.model
+            else:
+                cls.HotTable.Meta = type('Meta', (), {'model': cls.model})
 
 class _MetaModelDisplay(_MetaBaseDisplayModel):
     def __init__(cls, *args, **kw):
@@ -140,6 +197,8 @@ class _MetaModelDisplay(_MetaBaseDisplayModel):
         if hasattr(cls, 'DjangoTable'):
             if hasattr(cls.DjangoTable, 'Meta'):
                 cls.DjangoTable.Meta.model = cls.model
+            if len(cls.DjangoTable.base_columns) == 0:
+                cls.DjangoTable.base_columns['__unicode__'] = SelfLinkColumn(verbose_name='Name')
         _MetaBaseDisplayModel.__init__(cls, *args, **kw)
 
 class ModelDisplay(BaseDisplayModel):
@@ -160,59 +219,10 @@ class ModelDisplay(BaseDisplayModel):
     index = 100
     models2link2 = None
     
-class ModelDisplayMeta:
-    orderable = False
-    attrs = {'class': 'table table-bordered table-condensed'}
-    per_page = 100
-    
-class Table(tables.Table):
-    def __init__(self, *args, **kw):
-        self.viewname= kw.pop('viewname', None)
-        self.reverse_args_base = kw.pop('reverse_args', None)
-        self.apps = kw.pop('apps', None)
-        self.use_model_arg = kw.pop('use_model_arg', True)
-        
-        url_args = list(self.reverse_args_base)
-        if self.use_model_arg:
-            url_args.append('__mod_name__')
-        url_args.append('1234567')
-        self._url_base = reverse(self.viewname, args=url_args)
-        
-        if self.apps is None:
-            self.apps, _ = get_display_apps()
-        super(Table, self).__init__(*args, **kw)
-    
-class SelfLinkColumn(tables.Column):
-    def render(self, value, **kw):
-        record = kw['record']
-        table = kw['table']
-        if None in (table.viewname, table.reverse_args_base):
-            return value
-        else:
-            model_name = find_model(table.apps, record.__class__.__name__)[1]
-            url = table._url_base.replace('__mod_name__', model_name).replace('1234567', str(record.id))
-#             args = table.reverse_args_base[:]
-#             if table.use_model_arg:
-#                 args.append(model_name)
-#             args.append(record.id)
-#             url = reverse(table.viewname, args=args)
-            return mark_safe('<a href="%s">%s</a>' % (url, value))
-    
-class SterlingPriceColumn(tables.Column):
-    def render(self, value):
-        if value>1000:
-            return '{:,}'.format(value)
-        elif value>10:
-            return '%0.2f' % value
-        else:
-            string = '%0.3f' % value
-            if string.endswith('0'):
-                return string[:-1]
-            return string
-
-
-def get_display_apps():
-    return get_all_apps()
+    class DjangoTable(Table):
+        pass
+#         class Meta(ModelDisplayMeta):
+#             pass
 
 class _AppEncode(json.JSONEncoder):
     def default(self, obj):
