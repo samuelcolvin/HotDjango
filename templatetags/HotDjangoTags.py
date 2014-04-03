@@ -1,7 +1,7 @@
 from django import template
 from django.core.urlresolvers import reverse
-import HotDisplay.rest_views as rest_views
-import HotDisplay.public as public
+from .. import rest_views
+from .. import public
 import json
 from django.db import models
 from rest_framework.reverse import reverse as rest_reverse

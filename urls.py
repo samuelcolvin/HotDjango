@@ -4,9 +4,9 @@ import views
 import views_base as viewb
 import public
 
-urlpatterns = patterns('HotDisplay.views',
+urlpatterns = patterns('HotDjango.views',
 #    url(r'^$', views.AllView.as_view(), name='all-hot-table'),
-    url(r'^restful/', include('HotDisplay.rest_urls')),
+    url(r'^restful/', include('HotDjango.rest_urls')),
 #    url(r'^(?P<app>\w+)/(?P<model>\w+)$', views.TableView.as_view(), name='hot-table'),
     url(r'^disp/$', views.DisplayModel.as_view(), name= public.HOT_URL_NAME),
     url(r'^disp/(?P<app>\w+)/(?P<model>\w+)$', views.DisplayModel.as_view(), name= public.HOT_URL_NAME),

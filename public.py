@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 
 HOT_URL_NAME = 'hot_display'
 
-class HotDisplayError(Exception):
+class HotDjangoError(Exception):
     pass
 
 HOT_ID_IN_MODEL_STR = False

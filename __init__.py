@@ -4,12 +4,12 @@ from public import *
 
 def _check_settings_attr(attr):
     if not hasattr(settings, attr):
-        raise HotDisplayError('settings has no attribute "%s"' % attr)
+        raise HotDjangoError('settings has no attribute "%s"' % attr)
 
 try:
     import settings
 except ImportError:
-    raise HotDisplayError('settings module not found')
+    raise HotDjangoError('settings module not found')
 else:
     _check_settings_attr('DISPLAY_APPS')
     _check_settings_attr('SITE_TITLE')
@@ -19,5 +19,5 @@ else:
     try:
         _reverse(settings.INDEX_URL_NAME)
     except:
-        raise HotDisplayError('url with name settings.INDEX_URL_NAME: "%s" not found.' % settings.INDEX_URL_NAME)
+        raise HotDjangoError('url with name settings.INDEX_URL_NAME: "%s" not found.' % settings.INDEX_URL_NAME)
     
