@@ -21,8 +21,6 @@ class User(public.ModelDisplay):
         email = tables.Column()
         first_name = tables.Column()
         last_name = tables.Column()
-        class Meta(public.ModelDisplayMeta):
-            pass
     
     class form(forms.ModelForm):
         class Meta:

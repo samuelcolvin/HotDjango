@@ -183,10 +183,21 @@ class _MetaBaseDisplayModel(type):
         assert hasattr(cls, 'model'), '%s is missing a model, all display models must have a model attribute' % cls.__name__
         cls.model_name = cls.model.__name__
         if hasattr(cls, 'HotTable'):
+            dft_fields = ['id']
+            name_missing_e = None
+            if 'name' in cls.model._meta.get_all_field_names():
+                dft_fields.append('name')
+            else:
+                name_missing_e = HotDjangoError('%s has no "name" field and fields is not defined in HotTable' % cls.model.__name__)
             if hasattr(cls.HotTable, 'Meta'):
                 cls.HotTable.Meta.model = cls.model
-            else:
-                cls.HotTable.Meta = type('Meta', (), {'model': cls.model})
+                if not hasattr(cls.HotTable.Meta, 'fields'):
+                    if name_missing_e: raise name_missing_e
+                    cls.HotTable.Meta.fields =  dft_fields
+#             else:
+#                 if name_missing_e: raise name_missing_e
+#                 cls.HotTable.Meta = type('Meta', (), {'model': cls.model,
+#                                                       'fields': dft_fields})
 
 class _MetaModelDisplay(_MetaBaseDisplayModel):
     def __init__(cls, *args, **kw):
