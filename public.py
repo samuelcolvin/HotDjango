@@ -18,10 +18,6 @@ HOT_ID_IN_MODEL_STR = False
 if hasattr(settings, 'HOT_ID_IN_MODEL_STR'):
     HOT_ID_IN_MODEL_STR = settings.HOT_ID_IN_MODEL_STR
 
-class BaseDisplayModel:
-    __metaclass__ = type
-    verbose_names = {}
-
 class IDNameSerialiser(serializers.RelatedField):
     read_only = False
     def __init__(self, model, *args, **kwargs):
@@ -63,7 +59,6 @@ class ModelSerialiser(serializers.ModelSerializer):
             kwargs['hotsave'] = True
         super(ModelSerialiser, self).save(*args, **kwargs)
 
-
 def get_verbose_name(dm, field_name):
     dj_field = dm.model._meta.get_field_by_name(field_name)[0]
     if hasattr(dj_field, 'verbose_name'):
@@ -88,7 +83,7 @@ def get_display_apps():
             extra_render = getattr(app_display, 'extra_render', None)
         for ob_name in dir(app_display):
             ob = getattr(app_display, ob_name)
-            if inherits_from(ob, 'BaseDisplayModel'):
+            if inherits_from(ob, 'ModelDisplay'):
                 apps[app_name][ob_name] = ob
                 apps[app_name][ob_name]._app_name = app_name
     return apps, extra_render
@@ -132,7 +127,7 @@ class SelfLinkColumn(tables.Column):
         if None in (table.viewname, table.reverse_args_base):
             return value
         else:
-            disp_model_name = table.Meta.display_model.__name__
+            disp_model_name = table.Meta.display_model_name
             url = table._url_base.replace('__mod_name__', disp_model_name).replace('1234567', str(record.id))
             return mark_safe('<a href="%s">%s</a>' % (url, value))
     
@@ -177,13 +172,27 @@ class Table(tables.Table):
             self.apps, _ = get_display_apps()
         super(Table, self).__init__(*args, **kw)
 
-class _MetaBaseDisplayModel(type):    
-    def __init__(cls, *args, **kw):
-        type.__init__(cls, *args, **kw)
-        if cls.__name__ in ('BaseDisplayModel', 'ModelDisplay'):
+class _MetaModelDisplay(type):
+    def __init__(cls, name, parents, extra, **kw):
+        if cls.__name__ == 'ModelDisplay':
+            type.__init__(cls, name, parents, extra, **kw)
             return
-        assert hasattr(cls, 'model'), '%s is missing a model, all display models must have a model attribute' % cls.__name__
+        if not hasattr(cls, 'model'):
+            app_name = extra['__module__'].split('.')[0]
+            app = __import__(app_name, globals(), locals(), ['models'], -1)
+            c_name = cls.__name__
+            if not hasattr(app.models, c_name):
+                raise HotDjangoError('%s is missing a model, and no model in %s has that name' % (c_name, app_name))
+            cls.model = getattr(app.models, c_name)
         cls.model_name = cls.model.__name__
+        
+        if not hasattr(cls, 'DjangoTable'):
+            cls.DjangoTable = type('DjangoTable', (Table,), {})
+        
+        cls.DjangoTable.Meta.display_model_name = cls.__name__
+        if len(cls.DjangoTable.base_columns) == 0:
+            cls.DjangoTable.base_columns['__unicode__'] = SelfLinkColumn(verbose_name='Name')
+            
         if hasattr(cls, 'HotTable'):
             dft_fields = ['id']
             name_missing_e = None
@@ -196,31 +205,10 @@ class _MetaBaseDisplayModel(type):
                 if not hasattr(cls.HotTable.Meta, 'fields'):
                     if name_missing_e: raise name_missing_e
                     cls.HotTable.Meta.fields =  dft_fields
-#             else:
-#                 if name_missing_e: raise name_missing_e
-#                 cls.HotTable.Meta = type('Meta', (), {'model': cls.model,
-#                                                       'fields': dft_fields})
+        type.__init__(cls, name, parents, extra, **kw)
 
-class _MetaModelDisplay(_MetaBaseDisplayModel):
-    def __init__(cls, name, parents, extra, **kw):
-        if cls.__name__ == 'ModelDisplay':
-            return
-        if not hasattr(cls, 'model'):
-            app_name = extra['__module__'].split('.')[0]
-            app = __import__(app_name, globals(), locals(), ['models'], -1)
-            c_name = cls.__name__
-            if not hasattr(app.models, c_name):
-                raise HotDjangoError('%s is missing a model, and no model in %s has that name' % (c_name, app_name))
-            cls.model = getattr(app.models, c_name)
-        cls.model_name = cls.model.__name__
-        if hasattr(cls, 'DjangoTable'):
-            cls.DjangoTable.Meta.model = cls.model
-            cls.DjangoTable.Meta.display_model = cls
-            if len(cls.DjangoTable.base_columns) == 0:
-                cls.DjangoTable.base_columns['__unicode__'] = SelfLinkColumn(verbose_name='Name')
-        _MetaBaseDisplayModel.__init__(cls, name, parents, extra, **kw)
-
-class ModelDisplay(BaseDisplayModel):
+class ModelDisplay(object):
+    verbose_names = {}
     __metaclass__ = _MetaModelDisplay
     extra_funcs = []
     extra_fields = {}
@@ -237,9 +225,6 @@ class ModelDisplay(BaseDisplayModel):
     queryset= None
     index = 100
     models2link2 = None
-    
-    class DjangoTable(Table):
-        pass
 
 class _AppEncode(json.JSONEncoder):
     def default(self, obj):

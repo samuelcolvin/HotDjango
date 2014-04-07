@@ -3,6 +3,8 @@ import django.views.generic as generic
 import settings
 import public
 from django.core.urlresolvers import reverse
+from django.views.defaults import page_not_found
+from django.http import Http404
 
 HOT_VIEW_SETTINGS = {'viewname': public.HOT_URL_NAME, 
                     'args2include': [True, True], 
@@ -76,7 +78,7 @@ class ViewBase(object):
         try:
             return self._apps[app_name][model_name]
         except:
-            raise Exception('ERROR: %s.%s not found' % (app_name, model_name))
+            raise Http404('ERROR: %s.%s not found' % (app_name, model_name))
     
     def set_links(self):
         links =[]
