@@ -19,8 +19,6 @@
     "https://github.com/makeusabrew/bootbox/releases/download/v4.2.0/bootbox.min.js": "js/{{ filename }}",
     "https://raw.githubusercontent.com/aFarkas/html5shiv/3.7.0/dist/html5shiv.js": "js/{{ filename }}",
     "https://raw.githubusercontent.com/scottjehl/Respond/1.4.2/dest/respond.min.js": "js/{{ filename }}",
-    "https://raw.githubusercontent.com/twitter/typeahead.js/v0.10.2/dist/typeahead.jquery.js": "js/{{ filename }}",
-    "https://raw.githubusercontent.com/twitter/typeahead.js/v0.10.2/dist/typeahead.jquery.min.js": "js/{{ filename }}",
     "https://raw.githubusercontent.com/warpech/jquery-handsontable/v0.10.1/dist/jquery.handsontable.full.css": "css/{{ filename }}",
     "https://raw.githubusercontent.com/warpech/jquery-handsontable/v0.10.1/dist/jquery.handsontable.full.js": "js/{{ filename }}",
     "https://raw.githubusercontent.com/adamwdraper/Numeral-js/1.5.3/min/languages.min.js": "js/{{ filename }}",
