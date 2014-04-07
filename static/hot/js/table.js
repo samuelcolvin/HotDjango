@@ -21,6 +21,7 @@ function HandsontableDisplay(S){
 		afterChange: changed,
 	  	onSelection: on_select,
 		height: 700,
+        beforeKeyDown: press_save
 	};
 	
 	if (_.has(S, 'height'))
@@ -31,7 +32,6 @@ function HandsontableDisplay(S){
 	};
 
 	this.load_table = function() {
-		// console.log('height',handsontable_settings.height);
 		load_msg = 'Loaded Data';
 		get_data();
 	};
@@ -55,6 +55,15 @@ function HandsontableDisplay(S){
 			console.log(response);
 		}
 	}
+	
+	function press_save(event) {
+        if ((event.ctrlKey || event.metaKey) && event.keyCode == 'S'.charCodeAt(0)) {
+            event.stopImmediatePropagation();
+            if (typeof($('#savebtn').attr('disabled')) =='undefined')
+            	$('#savebtn').click();
+            event.preventDefault();
+        }
+    }
 	
 	function query_url(url){
 		var qurl = url;
