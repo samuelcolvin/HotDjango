@@ -22,7 +22,7 @@ class HotEdit(viewb.TemplateBase):
     def get_context_data(self, **kw):
         self.set_crums(add = [{'url': '', 'name': 'Mass Edit'}])
 #         self._context['title'] = 'Mass Editor'
-        self._top_active = 'display_index'
+        self._menu_active = 'display_index'
         self._context['app_name'] = self._app_name
         self._context['model_name'] = self._model_name
         return self._context

@@ -32,7 +32,7 @@ class Index(viewb.TemplateBase):
 	all_auth_permitted = True
 	
 	def setup_context(self, **kw):
-		self.request.session['top_active'] = None
+		self.request.session['menu_active'] = None
 		super(Index, self).setup_context(**kw)
 	
 	def get_context_data(self, **kw):
@@ -242,7 +242,7 @@ class TextDisplay(viewb.TemplateBase):
 		return self._context
 		
 class UserDisplay(DisplayItem):
-	top_active = 'user_profile'
+	menu_active = 'user_profile'
 	all_auth_permitted = True
 	side_menu = False
 	

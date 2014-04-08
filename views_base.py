@@ -9,13 +9,13 @@ from django.http import Http404
 HOT_VIEW_SETTINGS = {'viewname': public.HOT_URL_NAME, 
                     'args2include': [True, True], 
                     'base_name': 'Model Display', 
-                    'top_active': public.HOT_URL_NAME}
+                    'menu_active': public.HOT_URL_NAME}
     
 class ViewBase(object):
     side_menu = True
     all_auth_permitted = False
     extra_permission_check = None
-    top_active = None
+    menu_active = None
     show_crums = True
     
     def get(self, request, *args, **kw):
@@ -60,12 +60,12 @@ class ViewBase(object):
         self.create_crums()
         if self.side_menu:
             self.generate_side_menu()
-        top_active = self.view_settings['top_active']
-        if self.top_active:
-            top_active = self.top_active
+        menu_active = self.view_settings['menu_active']
+        if self.menu_active:
+            menu_active = self.menu_active
             
-        self.request.session['view_settings'] = {'viewname': self.viewname, 'top_active': top_active}
-        self._context.update(basic_context(self.request, top_active))
+        self.request.session['view_settings'] = {'viewname': self.viewname, 'menu_active': menu_active}
+        self._context.update(basic_context(self.request, menu_active))
         
     def is_allowed(self):
         return public.is_allowed_hot(self.request.user)
@@ -172,11 +172,11 @@ def get_plural_name(dm):
 def get_single_name(dm):
     return  unicode(dm.model._meta.verbose_name)
 
-def basic_context(request, top_active = None):
-    if top_active is not None:
-        request.session['top_active'] = top_active
-    elif 'top_active' in request.session:
-        top_active = request.session['top_active']
+def basic_context(request, menu_active = None):
+    if menu_active is not None:
+        request.session['menu_active'] = menu_active
+    elif 'menu_active' in request.session:
+        menu_active = request.session['menu_active']
     context = {}
     if 'message' in request.session:
         context['info'] = request.session.pop('info')
@@ -190,8 +190,8 @@ def basic_context(request, top_active = None):
     if hasattr(settings, 'INDEX_URL_NAME'):
         context['index'] = settings.INDEX_URL_NAME
     raw_menu = []
-    if hasattr(settings, 'TOP_MENU'):
-        for item in settings.TOP_MENU:
+    if hasattr(settings, 'MAIN_MENU'):
+        for item in settings.MAIN_MENU:
             if 'groups' in item:
                 if public.is_allowed_hot(request.user, permitted_groups=item['groups']):
                     raw_menu.append(item)
@@ -204,7 +204,7 @@ def basic_context(request, top_active = None):
         menu_item = {'url': reverse(item['url']), 'name': item['name']}
         if 'glyph' in item:
             menu_item['glyph'] = item['glyph']
-        if item['url'] == top_active:
+        if item['url'] == menu_active:
             menu_item['class'] = 'active'
         top_menu.append(menu_item)
     context['top_menu'] = top_menu
