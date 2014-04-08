@@ -115,10 +115,13 @@ def is_allowed_hot(user, permitted_groups=None):
         return True
     if permitted_groups == 'all-users':
         return not user.is_anonymous()
-    for group in user.groups.all().values_list('name', flat=True):
+    for group in user_groups(user):
         if group in permitted_groups:
             return True
     return False
+
+def user_groups(user):
+    return user.groups.all().values_list('name', flat=True)
     
 class SelfLinkColumn(tables.Column):
     def render(self, value, **kw):
