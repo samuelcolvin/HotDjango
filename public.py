@@ -8,6 +8,9 @@ from django.utils.html import escape
 from django_tables2.utils import A
 from django.core.urlresolvers import reverse
 import importlib
+from datetime import datetime as dtdt
+from datetime import timedelta
+import pytz
 
 HOT_URL_NAME = 'hot'
 
@@ -225,7 +228,8 @@ class ModelDisplay(object):
     deletable = True
     form = None
     formset_model = None
-    queryset= None
+    get_queryset = None
+    filter_options = None
     index = 100
     models2link2 = None
 
@@ -257,3 +261,38 @@ class Logger:
         
     def get_log(self):
         return self._log
+    
+class _base_time_filter(object):
+    def __init__(self, field_name, suffix = '__gt'):
+        self._key = field_name + suffix
+        
+    def _kw(self, filter_value):
+        return {self._key: filter_value}
+
+def _today():
+    return dtdt.now().replace(hour=0, minute=0, second=0, microsecond=0).replace(tzinfo=pytz.utc)
+
+class TimeFilters:
+        
+    @staticmethod
+    class today(_base_time_filter):
+        def __call__(self, qs):
+            return qs.filter(**self._kw(_today()))
+        
+    @staticmethod
+    class this_week(_base_time_filter):
+        def __call__(self, qs):
+            n = _today()
+            mon = n - timedelta(days=n.weekday())
+            return qs.filter(**self._kw(mon))
+    
+    @staticmethod
+    class recent(_base_time_filter):
+        def __init__(self, days, *args, **kw):
+            self._days = days
+            super(TimeFilters.recent, self).__init__(*args, **kw)
+            
+        def __call__(self, qs):
+            recent = dtdt.today()-timedelta(days=self._days)
+            recent = recent.replace(tzinfo=pytz.utc)
+            return qs.filter(**self._kw(recent))

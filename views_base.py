@@ -67,6 +67,16 @@ class ViewBase(object):
         self.request.session['view_settings'] = {'viewname': self.viewname, 'menu_active': menu_active}
         self._context.update(basic_context(self.request, menu_active))
         
+    def filter(self):
+        qs = self.queryset
+        if self._disp_model.get_queryset is not None:
+            qs = self._disp_model.get_queryset(self.request)
+        return qs
+    
+    @property
+    def queryset(self):
+        return self._disp_model.model.objects.all()
+        
     def is_allowed(self):
         return public.is_allowed_hot(self.request.user)
     

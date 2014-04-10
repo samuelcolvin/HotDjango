@@ -48,32 +48,30 @@ class FilterForm(forms.Form):
 
 class DisplayModel(viewb.TemplateBase):
 	template_name = 'hot/model_display.html'
-	_base_queryset = None
+	filter_form = FilterForm
 	
 	def get_context_data(self, **kw):
 		self._context['page_menu'] = self.set_links()
-		extra_filter = None
-		if hasattr(self, 'filter_options'):
-			choices = [(i, choice[0]) for i, choice in enumerate(self.filter_options)]
-			initial = 0
-			if 'filter' in self.request._get_get():
-				initial = int(self.request._get_get()['filter'])
-				extra_filter = self.filter_options[initial][1]
-			self._context['FilterForm'] = FilterForm(choices = choices, initial = initial)
-		if self._base_queryset:
-			qs = self._base_queryset()
-		elif self._disp_model.queryset is not None:
-			qs = self._disp_model.queryset()
-		else:
-			qs = self._disp_model.model.objects.all()
-		if extra_filter:
-			qs = extra_filter(qs)
+		qs = self.filter()
 		table = self.generate_table(self._disp_model.DjangoTable, qs)
 # 		RequestConfig(self.request).configure(table)
 		self._context['table'] = table
 		
 		self._context['title'] = self._plural_t
 		return self._context
+	
+	def filter(self):
+		qs = super(DisplayModel, self).filter()
+		if self._disp_model.filter_options is not None:
+			filter_ops = self._disp_model.filter_options
+			choices = [(i, choice[0]) for i, choice in enumerate(filter_ops)]
+			initial = 0
+			if 'filter' in self.request._get_get():
+				initial = int(self.request._get_get()['filter'])
+				extra_filter = filter_ops[initial][1]
+				qs = extra_filter(qs)
+			self._context['FilterForm'] = FilterForm(choices = choices, initial = initial)
+		return qs
 	
 	def get_item_args(self):
 		return [self._app_name, self._model_name]
