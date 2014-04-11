@@ -14,6 +14,7 @@ import public
 import django.views.generic as generic
 from django.core.context_processors import csrf
 import django.utils.formats as django_format
+from django.core.exceptions import ObjectDoesNotExist
 
 def logout(request):
 	auth_logout(request)
@@ -52,7 +53,7 @@ class DisplayModel(viewb.TemplateBase):
 	
 	def get_context_data(self, **kw):
 		self._context['page_menu'] = self.set_links()
-		qs = self.filter()
+		qs = self.filter
 		table = self.generate_table(self._disp_model.DjangoTable, qs)
 # 		RequestConfig(self.request).configure(table)
 		self._context['table'] = table
@@ -60,8 +61,9 @@ class DisplayModel(viewb.TemplateBase):
 		self._context['title'] = self._plural_t
 		return self._context
 	
+	@property
 	def filter(self):
-		qs = super(DisplayModel, self).filter()
+		qs = super(DisplayModel, self).filter
 		if self._disp_model.filter_options is not None:
 			filter_ops = self._disp_model.filter_options
 			choices = [(i, choice[0]) for i, choice in enumerate(filter_ops)]
@@ -148,7 +150,10 @@ class DisplayItem(viewb.TemplateBase):
 			if field.name in exceptions or field.name in dm.exclude:
 				continue
 			name = field.verbose_name
-			value = self._convert_to_string(getattr(item, field.name))
+			try:
+				value = self._convert_to_string(getattr(item, field.name))
+			except ObjectDoesNotExist:
+				value = 'Not Found'
 			item_fields.append({'name': name, 'state': value })
 		for name, func in dm.extra_funcs:
 			value = getattr(item, func)()
@@ -165,7 +170,7 @@ class DisplayItem(viewb.TemplateBase):
 	def _populate_tables(self, item, model):
 		generated_tables = []
 		for tab in model.attached_tables:
-			this_table={'title': tab['title']}
+			this_table={'title': tab['title'], 'id': tab['title'].lower()}
 			if 'populate' in tab:
 				popul = getattr(item, tab['populate']).all()
 			else:
@@ -189,22 +194,21 @@ class DisplayItem(viewb.TemplateBase):
 			else:
 				return u'\u2718'
 		elif isinstance(value, list) or isinstance(value, tuple) or isinstance(value, QuerySet):
-			return ', '.join([self._convert_to_string(v) for v in value])
+			return ', '.join(self._convert_to_string(v) for v in value)
 		elif isinstance(value, long) or isinstance(value, int) or isinstance(value, float):
 			return self._find_base(value)
 		elif isinstance(value, datetime):
 			return django_format.date_format(value, 'DATETIME_FORMAT')
-# 			return value.strftime(CUSTOM_DT_FORMAT)
 		elif isinstance(value, models.Model):
 			name = value.__class__.__name__
 			if self._disp_model.models2link2 and name not in self._disp_model.models2link2.keys():
 				return smart_str(value)
-			if  not self._disp_model.models2link2:
-				(app_name, disp_model) = self._find_model(value.__class__.__name__)
-				return '<a href="%s">%s</a>' % (reverse(self.viewname, args=self.args_base(app_name, disp_model) + [value.id]), str(value))
-			else:
+			if self._disp_model.models2link2 and name in self._disp_model.models2link2.keys():
 				rev = self._disp_model.models2link2[name]
 				return '<a href="%s">%s</a>' % (reverse(rev, args=[value.id]), str(value))
+			else:
+				(app_name, disp_model) = self._find_model(value.__class__.__name__)
+				return '<a href="%s">%s</a>' % (reverse(self.viewname, args=self.args_base(app_name, disp_model) + [value.id]), str(value))
 		elif isinstance(value, models.fields.files.ImageFieldFile):
 			if value.name:
 				return '<img src="%s" height="150" alt="image unavailable">' % value.url
@@ -259,33 +263,33 @@ class UserDisplay(DisplayItem):
 
 class AllView(generic.TemplateView):
 
-    template_name = 'all_hot.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(AllView, self).get_context_data(**kwargs)
-        context.update(base_context(self.request))
-        return context
+	template_name = 'all_hot.html'
+	
+	def get_context_data(self, **kwargs):
+		context = super(AllView, self).get_context_data(**kwargs)
+		context.update(base_context(self.request))
+		return context
 
 class TableView(generic.TemplateView):
-    template_name = 'simple_hot.html'
+	template_name = 'simple_hot.html'
+	
+	def get_context_data(self, **kwargs):
+		context = super(TableView, self).get_context_data(**kwargs)
+		self._app_name = kwargs['app']
+		context['app_name'] = self._app_name
+		context['model_name'] = kwargs['model']
+		context.update(base_context(self.request))
+		return context
 
-    def get_context_data(self, **kwargs):
-        context = super(TableView, self).get_context_data(**kwargs)
-        self._app_name = kwargs['app']
-        context['app_name'] = self._app_name
-        context['model_name'] = kwargs['model']
-        context.update(base_context(self.request))
-        return context
-    
 def base_context(request):
-    context = {}
-    apps = public.get_rest_apps()
-    context['menu'] = []
-    for app_name, app in apps.iteritems():
-        for model_name in app.keys():
-            context['menu'].append({'name': model_name,
-                         'url': reverse('hot-table', kwargs={'app': app_name, 'model': model_name})})
-    context['menu'].append({'name': 'Restful API',
-                 'url': reverse('all-hot-table') + 'restful'})
-    context.update(csrf(request))
-    return context
+	context = {}
+	apps = public.get_rest_apps()
+	context['menu'] = []
+	for app_name, app in apps.iteritems():
+		for model_name in app.keys():
+			context['menu'].append({'name': model_name,
+	                     'url': reverse('hot-table', kwargs={'app': app_name, 'model': model_name})})
+	context['menu'].append({'name': 'Restful API',
+	             'url': reverse('all-hot-table') + 'restful'})
+	context.update(csrf(request))
+	return context

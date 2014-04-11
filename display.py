@@ -4,7 +4,7 @@ import public
 from django.contrib.auth.models import User, Group
 import django.forms as forms
 
-AppName = 'HotDjango'
+AppName = 'hot'
 
 class User(public.ModelDisplay):
     model = User

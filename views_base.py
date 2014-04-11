@@ -3,8 +3,9 @@ import django.views.generic as generic
 import settings
 import public
 from django.core.urlresolvers import reverse
-from django.views.defaults import page_not_found
 from django.http import Http404
+from django.core.exceptions import ObjectDoesNotExist
+from django.template.response import TemplateResponse
 
 HOT_VIEW_SETTINGS = {'viewname': public.HOT_URL_NAME, 
                     'args2include': [True, True], 
@@ -14,26 +15,23 @@ HOT_VIEW_SETTINGS = {'viewname': public.HOT_URL_NAME,
 class ViewBase(object):
     side_menu = True
     all_auth_permitted = False
-    extra_permission_check = None
     menu_active = None
     show_crums = True
+    _apps, _extra_render = public.get_display_apps()
     
     def get(self, request, *args, **kw):
-        self.setup_context(**kw)
-        if not self.check_permissions():
+        try:
+            self.setup_context(**kw)
+        except ObjectDoesNotExist:
+            return redirect(reverse('permission_denied'))
+        if not self.allowed:
             return redirect(reverse('permission_denied'))
         return super(ViewBase, self).get(request, *args, **kw)
     
-    def check_permissions(self):
-        if self.extra_permission_check:
-            extra = self.extra_permission_check()
-            if extra is True:
-                return True
-            elif extra is False:
-                return False
-        if self.all_auth_permitted or self.is_allowed():
-            return True
-        return False
+    @property
+    def allowed(self):
+        return self.all_auth_permitted or \
+            public.is_allowed_hot(self.request.user, self._disp_model.permitted_groups)
     
     def setup_context(self, **kw):
         if not hasattr(self, 'view_settings'):
@@ -41,7 +39,6 @@ class ViewBase(object):
             if hasattr(settings, 'HOT_VIEW_SETTINGS'):
                 self.view_settings.update(settings.HOT_VIEW_SETTINGS)
         self.viewname = self.view_settings['viewname']
-        self._apps, self._extra_render = public.get_display_apps()
         self._disp_model = None
         self._app_name = kw.get('app', None)
         self._model_name = kw.get('model', None)
@@ -52,14 +49,13 @@ class ViewBase(object):
         self._plural_t = get_plural_name(self._disp_model)
         self._single_t = get_single_name(self._disp_model)
         if self._item_id is not None:
-            self._item = self._disp_model.model.objects.get(id = int(self._item_id))
+            self._item = self.filter.get(id = int(self._item_id))
         if not hasattr(self, '_context'):
             self._context={}
         if self._extra_render:
             self._context.update(self._extra_render(self.request))
+        self.generate_side_menu()
         self.create_crums()
-        if self.side_menu:
-            self.generate_side_menu()
         menu_active = self.view_settings['menu_active']
         if self.menu_active:
             menu_active = self.menu_active
@@ -67,27 +63,30 @@ class ViewBase(object):
         self.request.session['view_settings'] = {'viewname': self.viewname, 'menu_active': menu_active}
         self._context.update(basic_context(self.request, menu_active))
         
+    @property
     def filter(self):
-        qs = self.queryset
         if self._disp_model.get_queryset is not None:
-            qs = self._disp_model.get_queryset(self.request)
-        return qs
+            return self._disp_model.get_queryset(self.request)
+        else:
+            return self.default_queryset
     
     @property
-    def queryset(self):
+    def default_queryset(self):
         return self._disp_model.model.objects.all()
-        
-    def is_allowed(self):
-        return public.is_allowed_hot(self.request.user)
     
     def _get_default_names(self):
-        self._app_name = [app_name for app_name in self._apps.keys() if app_name != public.HOT_URL_NAME][0]
-        self._model_name = sorted(self._apps[self._app_name].values(), key=lambda model: model.index)[0].__name__
-    
+        for app_name in self._apps:
+            for model_name in self._apps[app_name]:
+                model = self._apps[app_name][model_name]
+                if model.display and public.is_allowed_hot(self.request.user, model.permitted_groups):
+                    self._app_name = app_name
+                    self._model_name = model_name
+                    return
+                                
     def _get_model(self, app_name, model_name):
         try:
             return self._apps[app_name][model_name]
-        except:
+        except KeyError:
             raise Http404('ERROR: %s.%s not found' % (app_name, model_name))
     
     def set_links(self):
@@ -119,6 +118,8 @@ class ViewBase(object):
             self.set_crums(set_to = crums)
 
     def generate_side_menu(self):
+        if not self.side_menu:
+            return
         side_menu = []
         active = None
         if self._disp_model is not None: active = self._disp_model.__name__
@@ -127,7 +128,7 @@ class ViewBase(object):
                 if hasattr(self, 'side_menu_items') and model_name not in self.side_menu_items:
                     continue
                 model = self._apps[app_name][model_name]
-                if model.display:
+                if model.display and public.is_allowed_hot(self.request.user, model.permitted_groups):
                     cls = ''
                     if model_name == active: cls = 'open'
                     side_menu.append({'url': reverse(self.viewname, args=self.args_base(app_name, model_name)), 
@@ -154,8 +155,12 @@ class ViewBase(object):
 class TemplateBase(ViewBase, generic.TemplateView):
     pass
 
-class PermissionDenied(ViewBase, generic.TemplateView):
+class TemplateResponseForbidden(TemplateResponse):
+    status_code = 403
+
+class PermissionDenied(TemplateBase):
     template_name = 'hot/simple_message.html'
+    response_class = TemplateResponseForbidden
     side_menu = False
     all_auth_permitted = True
     show_crums = False
@@ -167,6 +172,9 @@ class PermissionDenied(ViewBase, generic.TemplateView):
     def get_context_data(self, **kw):
         self._context['main_message'] = 'You do not have Permission to view this page.'
         return self._context
+    
+    def create_crums(self):
+        pass
     
     def setup_context(self, **kw):
         if 'view_settings' in self.request.session:
@@ -221,14 +229,5 @@ def basic_context(request, menu_active = None):
         
     context['site_title'] = settings.SITE_TITLE
     return context
-
-
-
-
-
-
-
-
-
 
 

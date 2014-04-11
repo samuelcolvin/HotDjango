@@ -36,9 +36,11 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
             return False
         return self._model_name == 'User' and self._item_id is not None and self.request.user.id == int(self._item_id)
     
-    def extra_permission_check(self):
+    def check_permissions(self):
+        # TODO: add setting to prevent user editing their own profile
         if self._editing_self():
             return True
+        return super(AddEditItem, self).check_permissions()
         
     def setup_context(self, **kw):
         if 'view_settings' in self.request.session:

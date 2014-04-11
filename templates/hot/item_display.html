@@ -23,8 +23,10 @@
 	{% if tables_below %}
 		{% load render_table from django_tables2 %}
 		{% for table in tables_below %}
-			<h3>{{table.title}}</h3>
-			{% render_table table.renderable %}
+			<div id="table_{{ table.id }}">
+				<h3>{{table.title}}</h3>
+				{% render_table table.renderable %}
+			</div>
 		{% endfor %}
 	{% endif %}
 	{% if hot %}

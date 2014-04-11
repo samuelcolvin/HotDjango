@@ -1,11 +1,11 @@
 from rest_framework import serializers
-import inspect, json, imp, os
+import inspect, json, os
 import settings
 import django_tables2 as tables
 import django_tables2.tables as tables2_tables
 from django.utils.safestring import mark_safe
-from django.utils.html import escape
-from django_tables2.utils import A
+# from django.utils.html import escape
+# from django_tables2.utils import A
 from django.core.urlresolvers import reverse
 import importlib
 from datetime import datetime as dtdt
@@ -86,7 +86,7 @@ def get_display_apps():
             extra_render = getattr(app_display, 'extra_render', None)
         for ob_name in dir(app_display):
             ob = getattr(app_display, ob_name)
-            if inherits_from(ob, 'ModelDisplay'):
+            if inspect.isclass(ob) and issubclass(ob, ModelDisplay):
                 apps[app_name][ob_name] = ob
                 apps[app_name][ob_name]._app_name = app_name
     return apps, extra_render
@@ -101,22 +101,16 @@ def get_rest_apps():
             del disp_app
     return display_apps
 
-def inherits_from(child, parent_name):
-    if inspect.isclass(child):
-        if parent_name in [c.__name__ for c in inspect.getmro(child)[1:]]:
-            return True
-    return False
-
-def is_allowed_hot(user, permitted_groups=None):
+def is_allowed_hot(user, permitted_groups = None):
     if user.is_staff:
         return True
     if permitted_groups is None:
         if not hasattr(settings, 'HOT_PERMITTED_GROUPS'):
             return False
         permitted_groups = settings.HOT_PERMITTED_GROUPS
-    if permitted_groups == 'all-anon':
+    if permitted_groups == 'ALL':
         return True
-    if permitted_groups == 'all-users':
+    if permitted_groups == 'AUTH':
         return not user.is_anonymous()
     for group in user_groups(user):
         if group in permitted_groups:
@@ -155,10 +149,10 @@ class ModelDisplayMeta(object):
     per_page = 100
     
 class _MetaTable(tables2_tables.DeclarativeColumnsMetaclass):
-    def __new__(mcs, name, bases, attrs):
+    def __new__(cls, name, bases, attrs):
         if '__metaclass__' not in attrs and 'Meta' not in attrs:
             attrs['Meta'] = type('Meta', (ModelDisplayMeta,), {})
-        return tables2_tables.DeclarativeColumnsMetaclass.__new__(mcs, name, bases, attrs)
+        return tables2_tables.DeclarativeColumnsMetaclass.__new__(cls, name, bases, attrs)
     
 class Table(tables.Table):   
     __metaclass__ = _MetaTable 
@@ -232,6 +226,7 @@ class ModelDisplay(object):
     filter_options = None
     index = 100
     models2link2 = None
+    permitted_groups = None
 
 class _AppEncode(json.JSONEncoder):
     def default(self, obj):
