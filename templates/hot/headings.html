@@ -9,7 +9,7 @@
 	  </div><!--/.well -->
 	</div><!--/sidebar-->
 {% endif %}
-<div class="{% if side_menu %}col-md-9 col-md-pull-3{% else %}col-md-12{% endif %}">
+<div class="{% if side_menu %}col-md-9 col-md-pull-3{% endif %}">
 	{% if crums %}
 	<ol class="breadcrumb">
 		{% for item in crums %}
@@ -46,6 +46,7 @@
 	
 	{% if page_menu %}
 	<div id="page-menu" class="hidden-print">
+		<div class="btn-group">
 		{% for item in page_menu %}
 			{% if item.url %}
 				<a href="{{item.url}}" class="btn btn-default {{item.classes}}" msg="{{ item.msg }}">{{item.name}}</a>
@@ -53,6 +54,7 @@
 				<button type="button" class="btn btn-default" onclick="{{item.onclick|safe}}">{{item.name}}</button>
 			{% endif %}
 		{% endfor %}
+		</div>
 	</div>
 	{% endif %}
 	<div>
