@@ -44,7 +44,7 @@ class ViewBase(object):
         self._model_name = kw.get('model', None)
         self._item_id = kw.get('id', None)
         if self._app_name is None and self._model_name is None:
-            self._get_default_names()
+            self._get_default_app_model()
         self._disp_model = self._get_model(self._app_name, self._model_name)
         self._plural_t = get_plural_name(self._disp_model)
         self._single_t = get_single_name(self._disp_model)
@@ -74,15 +74,18 @@ class ViewBase(object):
     def default_queryset(self):
         return self._disp_model.model.objects.all()
     
-    def _get_default_names(self):
+    def _get_default_app_model(self):
         for app_name in self._apps:
-            for model_name in self._apps[app_name]:
+            models =[(model_name, self._apps[app_name][model_name].index)\
+                      for model_name in self._apps[app_name]]
+            models = sorted(models, key = lambda x: x[1])
+            for model_name, _ in models:
                 model = self._apps[app_name][model_name]
                 if model.display and public.is_allowed_hot(self.request.user, model.permitted_groups):
                     self._app_name = app_name
                     self._model_name = model_name
                     return
-        self._app_name = self._apps.keys()[0]
+        self._app_name = settings.DISPLAY_APPS[0]
         self._model_name = self._apps[self._app_name].keys()[0]
                                 
     def _get_model(self, app_name, model_name):

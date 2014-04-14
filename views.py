@@ -211,7 +211,8 @@ class DisplayItem(viewb.TemplateBase):
 				return '<a href="%s">%s</a>' % (reverse(self.viewname, args=self.args_base(app_name, disp_model) + [value.id]), str(value))
 		elif isinstance(value, models.fields.files.ImageFieldFile):
 			if value.name:
-				return '<img src="%s" height="150" alt="image unavailable">' % value.url
+				return '<a href="%s"><img src="%s" alt="image unavailable"></a>' % \
+						(value.url, value.url)
 			else: return ''
 		else:
 			return smart_str(value)

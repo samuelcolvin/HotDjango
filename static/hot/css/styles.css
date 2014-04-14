@@ -48,6 +48,7 @@ tbody tr:hover {
 
 .item-display img{
 	border: solid 1px black;
+	max-height: 150px;
 }
 
 .filter-form label{
@@ -55,6 +56,9 @@ tbody tr:hover {
 }
 
 @media (max-width: 768px){
+	body {
+		background-color: white;
+	}
 	.dl-horizontal dt {
 		float: left;
 		width: 130px;
@@ -67,6 +71,11 @@ tbody tr:hover {
 	.dl-horizontal dd {
 		margin-left: 140px;
 		min-height: 1.42em;
+	}
+	.item-display img {
+		margin-left: -140px;
+		margin-top: 20px;
+		max-width: 150%;
 	}
 }
 @media (max-width: 600px){
