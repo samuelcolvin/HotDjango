@@ -109,7 +109,7 @@ def get_rest_apps():
     return display_apps
 
 def is_allowed_hot(user, permitted_groups = None):
-    if user.is_staff:
+    if user.is_staff and not permitted_groups == 'NOT_AUTH':
         return True
     if permitted_groups is None:
         if not hasattr(settings, 'HOT_PERMITTED_GROUPS'):
@@ -118,7 +118,9 @@ def is_allowed_hot(user, permitted_groups = None):
     if permitted_groups == 'ALL':
         return True
     if permitted_groups == 'AUTH':
-        return not user.is_anonymous()
+        return user.is_active
+    if permitted_groups == 'NOT_AUTH':
+        return user.is_anonymous()
     for group in user_groups(user):
         if group in permitted_groups:
             return True
