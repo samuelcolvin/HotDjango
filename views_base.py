@@ -15,6 +15,7 @@ HOT_VIEW_SETTINGS = {'viewname': public.HOT_URL_NAME,
 class ViewBase(object):
     side_menu = True
     all_auth_permitted = False
+    all_permitted = False
     menu_active = None
     show_crums = True
     _apps, _extra_render = public.get_display_apps()
@@ -30,7 +31,9 @@ class ViewBase(object):
     
     @property
     def allowed(self):
-        return self.all_auth_permitted or \
+        print 'active:',  self.request.user.is_active
+        return self.all_permitted or \
+            (self.all_auth_permitted and self.request.user.is_active) or \
             public.is_allowed_hot(self.request.user, self._disp_model.permitted_groups)
     
     def setup_context(self, **kw):
@@ -48,7 +51,7 @@ class ViewBase(object):
         self._disp_model = self._get_model(self._app_name, self._model_name)
         self._plural_t = get_plural_name(self._disp_model)
         self._single_t = get_single_name(self._disp_model)
-        if self._item_id is not None:
+        if self._item_id not in [None, 'None']:
             self._item = self.filter.get(id = int(self._item_id))
         if not hasattr(self, '_context'):
             self._context={}
@@ -168,7 +171,7 @@ class PermissionDenied(TemplateBase):
     template_name = 'hot/simple_message.html'
     response_class = TemplateResponseForbidden
     side_menu = False
-    all_auth_permitted = True
+    all_permitted = True
     show_crums = False
     
     def get(self, request, *args, **kw):
@@ -189,6 +192,25 @@ class PermissionDenied(TemplateBase):
         super(PermissionDenied, self).setup_context(**kw)
         if 'crums' in self._context:
             del self._context['crums']
+            
+class ModelEditView(ViewBase, 
+                    generic.edit.TemplateResponseMixin, 
+                    generic.edit.ModelFormMixin, 
+                    generic.edit.ProcessFormView):
+
+    def form_invalid(self, form):
+        self.error_log('Form not Valid')
+        return self.render_to_response(self.get_context_data(form=form))
+    
+    def success_log(self, line):
+        if not 'success' in self.request.session:
+            self.request.session['success'] = []
+        self.request.session['success'].append(line)
+     
+    def error_log(self, line):
+        if not 'errors' in self.request.session:
+            self.request.session['errors'] = []
+        self.request.session['errors'].append(line)
 
 def get_plural_name(dm):
     return  unicode(dm.model._meta.verbose_name_plural)

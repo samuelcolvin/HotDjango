@@ -30,7 +30,8 @@ def login(*args):
 class Index(viewb.TemplateBase):
 	template_name = 'hot/index.html'
 	side_menu = False
-	all_auth_permitted = True
+	all_permitted = True
+	show_crums = False
 	
 	def setup_context(self, **kw):
 		self.request.session['menu_active'] = None
@@ -260,7 +261,8 @@ class UserDisplay(DisplayItem):
 		links += super(UserDisplay, self).set_links()
 		links.append({'url': reverse('logout'), 'name': 'Logout'})
 		return links
-# ======= hands-on-table original:
+
+#hands-on-table:
 
 class AllView(generic.TemplateView):
 
