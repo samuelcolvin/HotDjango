@@ -44,6 +44,13 @@ class IDNameSerialiser(serializers.RelatedField):
             dj_id = int(item[:item.index(':')])
         return self._model.objects.get(id = dj_id)
 
+class BooleanColumn(tables.Column):
+    def render(self, value):
+        if value:
+            return mark_safe('<span class="glyphicon glyphicon glyphicon-ok"></span>')
+        else:
+            return mark_safe('<span class="glyphicon glyphicon glyphicon-remove"></span>')
+
 class ChoiceSerialiser(serializers.Serializer):
     read_only = False
     def __init__(self, choices, *args, **kwargs):

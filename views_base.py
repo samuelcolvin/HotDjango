@@ -24,6 +24,8 @@ class ViewBase(object):
         try:
             self.setup_context(**kw)
         except ObjectDoesNotExist:
+            import traceback;traceback.print_exc()
+            print 'ObjectDoesNotExist'
             return redirect(reverse('permission_denied'))
         if not self.allowed:
             return redirect(reverse('permission_denied'))
@@ -31,7 +33,6 @@ class ViewBase(object):
     
     @property
     def allowed(self):
-        print 'active:',  self.request.user.is_active
         return self.all_permitted or \
             (self.all_auth_permitted and self.request.user.is_active) or \
             public.is_allowed_hot(self.request.user, self._disp_model.permitted_groups)
@@ -52,7 +53,11 @@ class ViewBase(object):
         self._plural_t = get_plural_name(self._disp_model)
         self._single_t = get_single_name(self._disp_model)
         if self._item_id not in [None, 'None']:
-            self._item = self.filter.get(id = int(self._item_id))
+            sfilter = self.filter
+            if sfilter is None:
+                raise ObjectDoesNotExist('filter is None')
+            else:
+                self._item = sfilter.get(id = int(self._item_id))
         if not hasattr(self, '_context'):
             self._context={}
         if self._extra_render:
@@ -197,6 +202,20 @@ class ModelEditView(ViewBase,
                     generic.edit.TemplateResponseMixin, 
                     generic.edit.ModelFormMixin, 
                     generic.edit.ProcessFormView):
+    app = None
+    model = None
+    object = None
+    
+    def post(self, request, *args, **kw):
+        self.setup_context(**kw)
+        return super(ModelEditView, self).post(request, *args, **kw)
+    
+    def setup_context(self, **kw):
+        kw['app'] = self.app
+        kw ['model'] = self.model
+        super(ModelEditView, self).setup_context(**kw)
+        if self._item_id is not None:
+            self.object = self._item
 
     def form_invalid(self, form):
         self.error_log('Form not Valid')
@@ -211,6 +230,16 @@ class ModelEditView(ViewBase,
         if not 'errors' in self.request.session:
             self.request.session['errors'] = []
         self.request.session['errors'].append(line)
+    
+    def form_valid(self, form):
+        form.request = self.request
+        self.object = form.save()
+        self.success_log('%s saved' % self._disp_model.model_name)
+        return self.success_url
+    
+    @property
+    def success_url(self):
+        return redirect(reverse('deliveries', args=[self.object.id]))
 
 def get_plural_name(dm):
     return  unicode(dm.model._meta.verbose_name_plural)

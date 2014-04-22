@@ -21,11 +21,12 @@ class User(public.ModelDisplay):
         email = tables.Column()
         first_name = tables.Column()
         last_name = tables.Column()
+        is_active = public.BooleanColumn()
     
     class form(forms.ModelForm):
         class Meta:
             model = User
-            fields = ('first_name', 'last_name', 'email')
+            fields = ('first_name', 'last_name', 'email', 'is_active')
 
 class Group(public.ModelDisplay):
     model = Group
