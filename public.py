@@ -80,6 +80,7 @@ def get_verbose_name(dm, field_name):
 def get_display_apps():
     importer = lambda m: importlib.import_module('%s.display' % m)
     apps={}
+    models = set()
     extra_render = None
     for app_name in settings.DISPLAY_APPS:
         disp_path = os.path.join(app_name, 'display.py')
@@ -94,6 +95,9 @@ def get_display_apps():
         for ob_name in dir(app_display):
             ob = getattr(app_display, ob_name)
             if inspect.isclass(ob) and issubclass(ob, ModelDisplay):
+                if ob.model in models:
+                    continue
+                models.add(ob.model)
                 apps[app_name][ob_name] = ob
                 apps[app_name][ob_name]._app_name = app_name
     return apps, extra_render

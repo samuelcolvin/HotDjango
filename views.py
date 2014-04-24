@@ -251,7 +251,6 @@ class UserDisplay(DisplayItem):
 	side_menu = False
 	
 	def setup_context(self, **kw):
-		kw['app'] = public.HOT_URL_NAME
 		kw ['model'] = 'User'
 		kw['id'] = str(self.request.user.id)
 		super(UserDisplay, self).setup_context(**kw)

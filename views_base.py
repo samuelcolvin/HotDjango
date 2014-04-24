@@ -47,9 +47,7 @@ class ViewBase(object):
         self._app_name = kw.get('app', None)
         self._model_name = kw.get('model', None)
         self._item_id = kw.get('id', None)
-        if self._app_name is None and self._model_name is None:
-            self._get_default_app_model()
-        self._disp_model = self._get_model(self._app_name, self._model_name)
+        self._disp_model = self._get_model()
         self._plural_t = get_plural_name(self._disp_model)
         self._single_t = get_single_name(self._disp_model)
         if self._item_id not in [None, 'None']:
@@ -96,12 +94,18 @@ class ViewBase(object):
         self._app_name = settings.DISPLAY_APPS[0]
         self._model_name = self._apps[self._app_name].keys()[0]
                                 
-    def _get_model(self, app_name, model_name):
-            return self._apps[app_name][model_name]
-#         try:
-#             return self._apps[app_name][model_name]
-#         except KeyError:
-#             raise Http404('ERROR: %s.%s not found' % (app_name, model_name))
+    def _get_model(self):
+        if self._app_name is None and self._model_name is None:
+            self._get_default_app_model()
+        if self._app_name is None:
+            for app_name, app in self._apps.items():
+                if self._model_name in app:
+                    self._app_name = app_name
+                    break
+        try:
+            return self._apps[self._app_name][self._model_name]
+        except KeyError:
+            raise Http404('ERROR: %s.%s not found' % (self._app_name, self._model_name))
     
     def set_links(self):
         links =[]
