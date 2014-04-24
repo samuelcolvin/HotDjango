@@ -223,6 +223,12 @@ class ModelEditView(ViewBase,
 
     def form_invalid(self, form):
         self.error_log('Form not Valid')
+        general_errors = form.non_field_errors()
+        if len(general_errors) > 0:
+            self.error_log('General Errors: %r' % general_errors)
+        for k, v in form._errors.items():
+            self.error_log('%s: %s' % (k, v.as_text()))
+        self._context.update(set_messages(self.request))
         return self.render_to_response(self.get_context_data(form=form))
     
     def success_log(self, line):
@@ -243,7 +249,7 @@ class ModelEditView(ViewBase,
     
     @property
     def success_url(self):
-        return redirect(reverse('deliveries', args=[self.object.id]))
+        raise NotImplementedError('You need to add a success_url property')
 
 def get_plural_name(dm):
     return  unicode(dm.model._meta.verbose_name_plural)
@@ -256,13 +262,7 @@ def basic_context(request, menu_active = None):
         request.session['menu_active'] = menu_active
     elif 'menu_active' in request.session:
         menu_active = request.session['menu_active']
-    context = {}
-    if 'message' in request.session:
-        context['info'] = request.session.pop('info')
-    if 'success' in request.session:
-        context['success'] = request.session.pop('success')
-    if 'errors' in request.session:
-        context['errors'] = request.session.pop('errors')
+    context = set_messages(request)
     context['base_template'] = 'hot/page_base.html'
     if hasattr(settings, 'PAGE_BASE'):
         context['base_template'] = settings.PAGE_BASE
@@ -291,4 +291,12 @@ def basic_context(request, menu_active = None):
     context['site_title'] = settings.SITE_TITLE
     return context
 
-
+def set_messages(request):
+    context = {}
+    if 'message' in request.session:
+        context['info'] = request.session.pop('info')
+    if 'success' in request.session:
+        context['success'] = request.session.pop('success')
+    if 'errors' in request.session:
+        context['errors'] = request.session.pop('errors')
+    return context

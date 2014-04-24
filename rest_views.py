@@ -52,7 +52,7 @@ class ManyEnabledViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kw):
         self._base_request = request
-        super(ManyEnabledViewSet, self).create(request, *args, **kw)
+        return super(ManyEnabledViewSet, self).create(request, *args, **kw)
         
     def get_queryset(self):
         if self.query:

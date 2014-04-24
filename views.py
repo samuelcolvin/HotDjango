@@ -3,7 +3,7 @@ from datetime import datetime
 import settings
 from django.db import models
 from django.contrib.auth import logout as auth_logout
-from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 import views_base as viewb
 import django.contrib.auth.views
 from django.core.urlresolvers import reverse
@@ -18,7 +18,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 def logout(request):
 	auth_logout(request)
-	return HttpResponseRedirect(settings.LOGIN_URL)
+	return redirect(reverse(settings.INDEX_URL_NAME))
 
 def login(*args):
 	template = 'hot/login.html'
@@ -193,8 +193,6 @@ class DisplayItem(viewb.TemplateBase):
 			cdict = dict(field.choices)
 			if value in cdict:
 				return cdict[value]
-# 			print dir(value), value
-# 			import pdb;pdb.set_trace()
 		if isinstance(value, bool):
 			if value:
 				return '<span class="glyphicon glyphicon-ok"></span>'
