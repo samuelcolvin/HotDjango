@@ -23,9 +23,9 @@ if hasattr(settings, 'HOT_ID_IN_MODEL_STR'):
 
 class IDNameSerialiser(serializers.RelatedField):
     read_only = False
-    def __init__(self, model, *args, **kwargs):
+    def __init__(self, model, *args, **kw):
         self._model = model
-        super(IDNameSerialiser, self).__init__(*args, **kwargs)
+        super(IDNameSerialiser, self).__init__(*args, **kw)
         
     def to_native(self, item):
         if hasattr(item, 'hot_name'):
@@ -68,6 +68,11 @@ class ModelSerialiser(serializers.ModelSerializer):
         if hasattr(self.object, 'hotsave_enabled') and self.object.hotsave_enabled:
             kwargs['hotsave'] = True
         super(ModelSerialiser, self).save(*args, **kwargs)
+            
+    def get_fields(self):
+        if hasattr(self.__class__, 'custom_fields'):
+            self.opts.fields = self.__class__.custom_fields(self.request)
+        return super(ModelSerialiser, self).get_fields()
 
 def get_verbose_name(dm, field_name):
     dj_field = dm.model._meta.get_field_by_name(field_name)[0]

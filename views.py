@@ -152,7 +152,7 @@ class DisplayItem(viewb.TemplateBase):
 				continue
 			name = field.verbose_name
 			try:
-				value = self._convert_to_string(getattr(item, field.name))
+				value = self._convert_to_string(getattr(item, field.name), field)
 			except ObjectDoesNotExist:
 				value = 'Not Found'
 			item_fields.append({'name': name, 'state': value })
@@ -164,7 +164,7 @@ class DisplayItem(viewb.TemplateBase):
 			sub_item = item
 			for part in field.split('__'):
 				sub_item = getattr(sub_item, part)
-			value = self._convert_to_string(sub_item)
+			value = self._convert_to_string(sub_item, field)
 			item_fields.append({'name': name, 'state': value})
 		return item_fields
 	
@@ -186,17 +186,23 @@ class DisplayItem(viewb.TemplateBase):
 
 		return generated_tables
 	
-	def _convert_to_string(self, value):
+	def _convert_to_string(self, value, field = None):
 		if value == None:
 			return ''
+		if field and len(field.choices) > 0:
+			cdict = dict(field.choices)
+			if value in cdict:
+				return cdict[value]
+# 			print dir(value), value
+# 			import pdb;pdb.set_trace()
 		if isinstance(value, bool):
 			if value:
-				return u'\u2713'
+				return '<span class="glyphicon glyphicon-ok"></span>'
 			else:
-				return u'\u2718'
-		elif isinstance(value, list) or isinstance(value, tuple) or isinstance(value, QuerySet):
+				return '<span class="glyphicon glyphicon-remove"></span>'
+		elif isinstance(value, (list, tuple, QuerySet)):
 			return ', '.join(self._convert_to_string(v) for v in value)
-		elif isinstance(value, long) or isinstance(value, int) or isinstance(value, float):
+		elif isinstance(value, (long, int, float)):
 			return self._find_base(value)
 		elif isinstance(value, datetime):
 			return django_format.date_format(value, 'DATETIME_FORMAT')

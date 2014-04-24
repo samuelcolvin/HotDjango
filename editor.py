@@ -60,6 +60,7 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
             self.form_class = self._disp_model.form
         else:
             self.form_class = form_models.modelform_factory(self._disp_model.model)
+        self.form_class.request = self.request
     
     def post(self, request, *args, **kw):
         self.setup_context(**kw)
@@ -96,7 +97,7 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
 
     def get_context_data(self, **kw):
         self._context.update(super(AddEditItem, self).get_context_data(**kw))
-        self._context['title'] = '%s %s' % (self.action, self._disp_model.model_name)
+        self._context['title'] = '%s %s' % (self.action,viewb.get_single_name(self._disp_model))
         
         if self._disp_model.formset_model is not None:
             Formset = form_models.inlineformset_factory(self._disp_model.model, self._disp_model.formset_model, extra=2)

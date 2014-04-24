@@ -17,7 +17,7 @@ import json
 class CustomIsAuthenticated(BasePermission):
     def has_permission(self, request, view):
         if request.user and request.user.is_authenticated():
-            return public.is_allowed_hot(request.user)
+            return public.is_allowed_hot(request.user, permitted_groups = view._display_model.permitted_groups)
         return False
 
 class ManyEnabledRouter(routers.DefaultRouter):
@@ -34,8 +34,14 @@ class ManyEnabledRouter(routers.DefaultRouter):
     )
 
 class ManyEnabledViewSet(viewsets.ModelViewSet):
-    query = None      
+    query = None
+    
+    def __init__(self, *args, **kw):
+        self._all_apps, _ = public.get_display_apps()
+        super(ManyEnabledViewSet, self).__init__(*args, **kw)
+    
     def list(self, request, *args, **kwargs):
+        self._base_request = request
         query = dict(request.QUERY_PARAMS)
         if len(query) > 0:
             for k, v in query.items():
@@ -43,14 +49,25 @@ class ManyEnabledViewSet(viewsets.ModelViewSet):
                 except: query[k] = v[0]
             self.query = query
         return self._standard_list_headings(request, *args, **kwargs)
+    
+    def create(self, request, *args, **kw):
+        self._base_request = request
+        super(ManyEnabledViewSet, self).create(request, *args, **kw)
         
     def get_queryset(self):
         if self.query:
             q = self.model.objects.filter(**self.query)
         else:
-            q = self.model.objects.all()
+            if self._display_model.get_queryset:
+                q = self._display_model.get_queryset(self.request)
+            else:
+                q = self.model.objects.all()
         self.query = None
         return q
+    
+    def get_serializer(self, *args, **kw):
+        self.serializer_class.request = self._base_request
+        return super(ManyEnabledViewSet, self).get_serializer(*args, **kw)
     
     @link()
     def getm2m(self, request, pk, *args, **kwargs):
@@ -70,7 +87,6 @@ class ManyEnabledViewSet(viewsets.ModelViewSet):
     
     @action()
     def setm2m(self, request, pk, *args, **kwargs):
-#         return self._repond_with_error(Exception('Random error'))
         response = self.getm2m(request, pk, *args, **kwargs)
         if response.status_code != status.HTTP_200_OK:
             return response
@@ -108,8 +124,8 @@ class ManyEnabledViewSet(viewsets.ModelViewSet):
     def update_add_delete_many(self, request, *args, **kwargs):
 #         sleep(1.5)
         try:
-            self._all_data = request.DATA
             self._base_request = request
+            self._all_data = request.DATA
             if isinstance(self._all_data, dict):
                 response_data = {}
                 self._response_status = status.HTTP_200_OK
@@ -134,17 +150,17 @@ class ManyEnabledViewSet(viewsets.ModelViewSet):
         data = self._all_data[action]
         if not isinstance(data, list):
             raise Exception('%s DATA is not a list' % action)
-        response_data = {'STATUS': 'SUCCESS', 'IDS': {}}
+        response_data = {'STATUS': 'SUCCESS', 'IDS': {}}#, 'ACTION': action
         for data_item in data:
             if data_item['id'] is None:
                 response_data['IDS']['unknown'] = {'data': 'ID is blank: ' + str(data_item), 
                                                    'status': status.HTTP_400_BAD_REQUEST}
                 response_data['STATUS'] = 'PARTIAL ERROR'
                 continue
-            self._base_request._data = data_item
             id_before = data_item['id']
+            self._base_request._data = data_item
             if action == 'MODIFY':
-                self.kwargs[self.pk_url_kwarg] = data_item['id']
+                self.kwargs[self.pk_url_kwarg] = id_before
                 response = self.partial_update(self._base_request, *args, **kwargs)
             else:
                 del self._base_request._data['id']
@@ -155,7 +171,13 @@ class ManyEnabledViewSet(viewsets.ModelViewSet):
                 self._response_status = status.HTTP_201_CREATED
             if response.status_code not in (status.HTTP_200_OK, status.HTTP_201_CREATED):
                 self._response_status = status.HTTP_303_SEE_OTHER
-                response_data['IDS'][data_item['id']]['data'] = response.data
+                if id_before in response_data['IDS']:
+                    response_data['IDS'][id_before]['data'] = response.data
+                else:
+                    response_data['IDS'][id_before] = {'data': response.data}
+#                 except:
+#                     print 'ERROR settings response_data, response data: '
+#                     print response.data
                 response_data['STATUS'] = 'PARTIAL ERROR'
         return response_data
     
@@ -186,9 +208,12 @@ class ManyEnabledViewSet(viewsets.ModelViewSet):
     
     def _get_info(self):
         fields = []
-        self._all_apps = public.get_rest_apps()
         readonly = getattr(self._display_model.HotTable.Meta, 'readonly', [])
-        for field_name in self._display_model.HotTable.Meta.fields:
+        if hasattr(self.serializer_class, 'custom_fields'):
+            field_list = self.serializer_class.custom_fields(self._base_request)
+        else:
+            field_list = self.serializer_class.Meta.fields
+        for field_name in field_list:
             fields.append(self._get_field_info(field_name, field_name in readonly))
         return fields
     
@@ -198,19 +223,27 @@ class ManyEnabledViewSet(viewsets.ModelViewSet):
         verb_name = public.get_verbose_name(dm, field_name)
         field = {'heading': verb_name, 'name': field_name, 'readonly': readonly or field_name == 'id'}
         field['type'] = dj_field.__class__.__name__
-        if isinstance(dj_field, models.ForeignKey) or isinstance(dj_field, models.ManyToManyField):
+        custom_serialiser = field_name in self._display_model.HotTable.base_fields
+        if (isinstance(dj_field, models.ForeignKey) \
+                    or isinstance(dj_field, models.ManyToManyField)) and custom_serialiser:
             mod = dj_field.rel.to
             field['fk_items'] = self._add_fk_model(mod)
         elif isinstance(dj_field, models.related.RelatedObject) and hasattr(dm, 'related_tables'):
             other_disp_model = dm.related_tables[field_name]
             field['url'] = reverse(generate_reverse(self._app_name, other_disp_model.__name__) + '-list')
             field['filter_on'] = dj_field.field.name
-        elif hasattr(dj_field, 'choices') and len(dj_field.choices) > 0:
+        elif hasattr(dj_field, 'choices') and len(dj_field.choices) > 0 and custom_serialiser:
             field['choices'] = [choice[1] for choice in dj_field.choices]
         return field
     
     def _add_fk_model(self, model):
-        return [self._get_id_name(item) for item in model.objects.all()]
+        qs = model.objects.all()
+        app_model = public.find_disp_model(self._all_apps, model.__name__)
+        if app_model:
+            dm = self._all_apps[app_model[0]][app_model[1]]
+            if dm.get_queryset:
+                qs = dm.get_queryset(self.request)
+        return [self._get_id_name(item) for item in qs]
     
     def _get_id_name(self, item):
         if hasattr(item, 'hot_name'):

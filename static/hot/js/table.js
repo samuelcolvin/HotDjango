@@ -389,31 +389,26 @@ function HandsontableDisplay(S){
 			console.log(response);
 			if (_.has(response, 'DELETED') && _.has(response, 'MODIFIED')){
 				message_fade('Error Occured Saving some rows', 0);
-				S.$error.text('MODIFY ERRORS:');
-				var mod = response.MODIFIED;
-				for (var id in mod.IDS){
-					if (!_.contains([200, 201], mod.IDS[id].status)){
-						S.$error.append('    ID ' + id + ': ');
-						if (id != 'unknown'){
-							for (var col_name in mod.IDS[id].data){
-									colour_cells(id, col_name);
-									var msg = mod.IDS[id].data[col_name].toString().replace('.','');
-									S.$error.append(col_name + ': ' + msg + ', ');
+				_.forEach(response, function(value, key){
+					if (!_.contains(value.STATUS.toUpperCase(), 'ERROR'))
+						return;
+					S.$error.append('' + key + ' ERRORS:\n');
+					for (var id in value.IDS){
+						if (!_.contains([200, 201], value.IDS[id].status)){
+							S.$error.append('    ID ' + id + ': ');
+							if (id != 'unknown'){
+								for (var col_name in value.IDS[id].data){
+										colour_cells(id, col_name);
+										var msg = value.IDS[id].data[col_name].toString().replace('.','');
+										S.$error.append(col_name + ': ' + msg + ', ');
+								}
+							} else {
+								S.$error.append(JSON.stringify(value.IDS[id].data));
 							}
-						} else {
-							S.$error.append(JSON.stringify(mod.IDS[id].data));
+							S.$error.append('\n');
 						}
-						S.$error.append('\n');
 					}
-				}
-				if (response.DELETED.STATUS != 'SUCCESS'){
-					S.$error.append('DELETE ERRORS:');
-					for (var id in response.DELETED.IDS){
-						if (!_.contains([200, 201], response.DELETED.IDS[id].status))
-							S.$error.append('    ID ' + id + ', ');
-					}
-					S.$error.append('\n');
-				}
+				});
 				
 			}
 			else{
