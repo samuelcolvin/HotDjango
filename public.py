@@ -1,78 +1,19 @@
-from rest_framework import serializers
 import inspect, json, os
 import settings
-import django_tables2 as tables
-import django_tables2.tables as tables2_tables
-from django.utils.safestring import mark_safe
-# from django.utils.html import escape
-# from django_tables2.utils import A
 from django.core.urlresolvers import reverse
 import importlib
 from datetime import datetime as dtdt
 from datetime import timedelta
+import django_tables2.tables as tables2_tables
+import django_tables2 as tables
 import pytz
+from serialisers import HOT_ID_IN_MODEL_STR, IDNameSerialiser, ChoiceSerialiser, ModelSerialiser
+from columns import SterlingPriceColumn, SelfLinkColumn, BooleanColumn, LinkColumn
 
 HOT_URL_NAME = 'hot'
 
 class HotDjangoError(Exception):
     pass
-
-HOT_ID_IN_MODEL_STR = False
-if hasattr(settings, 'HOT_ID_IN_MODEL_STR'):
-    HOT_ID_IN_MODEL_STR = settings.HOT_ID_IN_MODEL_STR
-
-class IDNameSerialiser(serializers.RelatedField):
-    read_only = False
-    def __init__(self, model, *args, **kw):
-        self._model = model
-        super(IDNameSerialiser, self).__init__(*args, **kw)
-        
-    def to_native(self, item):
-        if hasattr(item, 'hot_name'):
-            name = item.hot_name()
-        else:
-            name = str(item)
-        if HOT_ID_IN_MODEL_STR:
-            return name
-        else:
-            return '%d: %s' % (item.id, name)
-    
-    def from_native(self, item):
-        try:
-            dj_id = int(item)
-        except:
-            dj_id = int(item[:item.index(':')])
-        return self._model.objects.get(id = dj_id)
-
-class BooleanColumn(tables.Column):
-    def render(self, value):
-        if value:
-            return mark_safe('<span class="glyphicon glyphicon glyphicon-ok"></span>')
-        else:
-            return mark_safe('<span class="glyphicon glyphicon glyphicon-remove"></span>')
-
-class ChoiceSerialiser(serializers.Serializer):
-    read_only = False
-    def __init__(self, choices, *args, **kwargs):
-        self._choices = choices
-        super(ChoiceSerialiser, self).__init__(*args, **kwargs)
-        
-    def to_native(self, item):
-        return next(choice[1] for choice in self._choices if choice[0] == item)
-    
-    def from_native(self, item):
-        return next(choice[0] for choice in self._choices if choice[1] == item)
-    
-class ModelSerialiser(serializers.ModelSerializer):
-    def save(self, *args, **kwargs):
-        if hasattr(self.object, 'hotsave_enabled') and self.object.hotsave_enabled:
-            kwargs['hotsave'] = True
-        super(ModelSerialiser, self).save(*args, **kwargs)
-            
-    def get_fields(self):
-        if hasattr(self.__class__, 'custom_fields'):
-            self.opts.fields = self.__class__.custom_fields(self.request)
-        return super(ModelSerialiser, self).get_fields()
 
 def get_verbose_name(dm, field_name):
     dj_field = dm.model._meta.get_field_by_name(field_name)[0]
@@ -137,58 +78,6 @@ def is_allowed_hot(user, permitted_groups = None):
 
 def user_groups(user):
     return user.groups.all().values_list('name', flat=True)
-    
-class SelfLinkColumn(tables.Column):
-    def render(self, value, **kw):
-        record = kw['record']
-        table = kw['table']
-        if None in (table.viewname, table.reverse_args_base):
-            return value
-        else:
-            disp_model_name = table.Meta.display_model_name
-            url = table._url_base.replace('__mod_name__', disp_model_name).replace('1234567', str(record.id))
-            return mark_safe('<a href="%s">%s</a>' % (url, value))
-    
-class SterlingPriceColumn(tables.Column):
-    def render(self, value):
-        if value>1000:
-            return '{:,}'.format(value)
-        elif value>10:
-            return '%0.2f' % value
-        else:
-            string = '%0.3f' % value
-            if string.endswith('0'):
-                return string[:-1]
-            return string
-    
-class ModelDisplayMeta(object):
-    orderable = False
-    attrs = {'class': 'table table-bordered table-condensed'}
-    per_page = 100
-    
-class _MetaTable(tables2_tables.DeclarativeColumnsMetaclass):
-    def __new__(cls, name, bases, attrs):
-        if '__metaclass__' not in attrs and 'Meta' not in attrs:
-            attrs['Meta'] = type('Meta', (ModelDisplayMeta,), {})
-        return tables2_tables.DeclarativeColumnsMetaclass.__new__(cls, name, bases, attrs)
-    
-class Table(tables.Table):   
-    __metaclass__ = _MetaTable 
-    def __init__(self, *args, **kw):
-        self.viewname= kw.pop('viewname', None)
-        self.reverse_args_base = kw.pop('reverse_args', None)
-        self.apps = kw.pop('apps', None)
-        self.use_model_arg = kw.pop('use_model_arg', True)
-        
-        url_args = list(self.reverse_args_base)
-        if self.use_model_arg:
-            url_args.append('__mod_name__')
-        url_args.append('1234567')
-        self._url_base = reverse(self.viewname, args=url_args)
-        
-        if self.apps is None:
-            self.apps, _ = get_display_apps()
-        super(Table, self).__init__(*args, **kw)
 
 class _MetaModelDisplay(type):
     def __init__(cls, name, parents, extra, **kw):
@@ -245,6 +134,41 @@ class ModelDisplay(object):
     index = 100
     models2link2 = None
     permitted_groups = None
+    
+    
+class ModelDisplayMeta(object):
+    orderable = False
+    attrs = {'class': 'table table-bordered table-condensed'}
+    per_page = 100
+        
+class _MetaTable(tables2_tables.DeclarativeColumnsMetaclass):
+    def __new__(cls, name, bases, attrs):
+        if '__metaclass__' not in attrs and 'Meta' not in attrs:
+            attrs['Meta'] = type('Meta', (ModelDisplayMeta,), {})
+        return tables2_tables.DeclarativeColumnsMetaclass.__new__(cls, name, bases, attrs)
+    
+class Table(tables.Table):   
+    __metaclass__ = _MetaTable 
+    def __init__(self, *args, **kw):
+        self.viewname= kw.pop('viewname', None)
+        self.reverse_args_base = kw.pop('reverse_args', None)
+        self.apps = kw.pop('apps', None)
+        self.use_model_arg = kw.pop('use_model_arg', True)
+        self.request = kw.pop('request', None)
+        if self.request:
+            for name, column in self.base_columns.items():
+                pass
+#                 import pdb;pdb.set_trace()
+        
+        url_args = list(self.reverse_args_base)
+        if self.use_model_arg:
+            url_args.append('__mod_name__')
+        url_args.append('1234567')
+        self._url_base = reverse(self.viewname, args=url_args)
+        
+        if self.apps is None:
+            self.apps, _ = get_display_apps()
+        super(Table, self).__init__(*args, **kw)
 
 class _AppEncode(json.JSONEncoder):
     def default(self, obj):

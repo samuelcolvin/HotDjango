@@ -168,7 +168,12 @@ class ViewBase(object):
         use_model_arg = True
         if not self.view_settings['args2include'][1]:
             use_model_arg = False
-        return table(queryset, viewname=self.viewname, reverse_args=self.args_base(), apps=self._apps, use_model_arg = use_model_arg)
+        return table(queryset, 
+                     viewname=self.viewname, 
+                     reverse_args=self.args_base(), 
+                     apps=self._apps, 
+                     use_model_arg = use_model_arg,
+                     request = self.request)
 
 class TemplateBase(ViewBase, generic.TemplateView):
     pass
