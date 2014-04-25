@@ -212,15 +212,16 @@ class DisplayItem(viewb.TemplateBase):
 				rev = self._disp_model.models2link2[name]
 				return '<a href="%s">%s</a>' % (reverse(rev, args=[value.id]), str(value))
 			else:
-				(app_name, disp_model) = self._find_model(value.__class__.__name__)
-				return '<a href="%s">%s</a>' % (reverse(self.viewname, args=self.args_base(app_name, disp_model) + [value.id]), str(value))
+				app_mod = self._find_model(value.__class__.__name__)
+				if app_mod:
+					app_name, disp_model = app_mod
+					return '<a href="%s">%s</a>' % (reverse(self.viewname, args=self.args_base(app_name, disp_model) + [value.id]), str(value))
 		elif isinstance(value, models.fields.files.ImageFieldFile):
 			if value.name:
 				return '<a href="%s"><img src="%s" alt="image unavailable"></a>' % \
 						(value.url, value.url)
 			else: return ''
-		else:
-			return smart_str(value)
+		return smart_str(value)
 				
 	def _find_model(self, to_find):
 		return public.find_disp_model(self._apps, to_find, self._app_name)
