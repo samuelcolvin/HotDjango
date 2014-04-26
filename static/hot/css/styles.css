@@ -28,6 +28,14 @@ tbody tr:hover {
 	background-color: #e0e0e0;
 }
 
+.navbar-brand.logo {
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+.navbar-brand.logo img {
+	height: 40px;
+}
+
 .centered{
     float: none;
     margin: 0 auto;

@@ -295,11 +295,13 @@ def basic_context(request, menu_active = None):
     context['top_menu'] = top_menu
         
     context['site_title'] = settings.SITE_TITLE
+    if hasattr(settings, 'SITE_LOGO'):
+        context['site_logo'] = settings.SITE_LOGO
     return context
 
 def set_messages(request):
     context = {}
-    if 'message' in request.session:
+    if 'info' in request.session:
         context['info'] = request.session.pop('info')
     if 'success' in request.session:
         context['success'] = request.session.pop('success')
