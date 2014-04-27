@@ -4,6 +4,7 @@ import views_base as viewb
 import django.views.generic.edit as generic_editor
 import django.forms.models as form_models
 import settings
+from django.contrib.auth.views import password_change
 
 class HotEdit(viewb.TemplateBase):
     template_name = 'hot/hot_edit.html'
@@ -124,6 +125,14 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
 class DeleteItem(viewb.TemplateBase):
     def get(self, request, *args, **kw):
         self.setup_context(**kw)
-        self.request.session['success'] = ['%s deleted' % self._item]
+        self.request.session['success'] = '%s deleted' % self._item
         self._item.delete()
         return redirect(reverse(self.viewname, args=self.args_base(model=self._model_name)))
+
+def change_password(request):
+    basic_context = viewb.basic_context(request)
+    return password_change(request, 
+                           template_name = 'hot/add_edit.html',
+                           post_change_redirect = 'user_profile',
+                           extra_context = basic_context)
+    

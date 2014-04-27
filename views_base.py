@@ -302,9 +302,12 @@ def basic_context(request, menu_active = None):
 def set_messages(request):
     context = {}
     if 'info' in request.session:
-        context['info'] = request.session.pop('info')
+        info = request.session.pop('info')
+        context['info'] = (info, [info])[isinstance(info, basestring)]
     if 'success' in request.session:
-        context['success'] = request.session.pop('success')
+        success = request.session.pop('success')
+        context['success'] = (success, [success])[isinstance(success, basestring)]
     if 'errors' in request.session:
-        context['errors'] = request.session.pop('errors')
+        errors = request.session.pop('errors')
+        context['errors'] = (errors, [errors])[isinstance(errors, basestring)]
     return context

@@ -81,7 +81,7 @@ class DisplayModel(viewb.TemplateBase):
 	
 	def set_links(self):
 		links = super(DisplayModel, self).set_links()
-		if hasattr(self._disp_model, 'HotTable'):
+		if self._disp_model.HotTable:
 			links.append({'url': reverse('hot_edit', kwargs={'app': self._app_name, 'model': self._model_name}), 'name': 'Mass Edit'})
 		return links
 
@@ -101,7 +101,6 @@ class DisplayItem(viewb.TemplateBase):
 				status_groups.append({'title': field.verbose_name, 'fields': self._populate_fields(model, self._apps[self._app_name][model_name])})
 		
 		self._context['status_groups'] = status_groups
-# 		if not self.custom_tables_below:
 		self._context['tables_below'] = self._populate_tables(self._item, self._disp_model)
 		
 		name = str(self._disp_model.model.objects.get(id=int(self._item_id)))
@@ -117,21 +116,24 @@ class DisplayItem(viewb.TemplateBase):
 			links.append({'url': reverse('edit_item', args=[self._app_name, self._model_name, self._item.id]), 'name': 'Edit ' + self._single_t})
 		if self._disp_model.deletable:
 			links.append({'url': reverse('delete_item', args=[self._app_name, self._model_name, self._item.id]), 
-					  'name': 'Delete ' + self._single_t, 'classes': 'confirm-follow', 
-                      'msg': 'Are you sure you wish to delete this item?'})
-		if hasattr(self._disp_model, 'related_tables'):
+					  	  'name': 'Delete ' + self._single_t, 
+					  	  'classes': 'confirm-follow', 
+                          'msg': 'Are you sure you wish to delete this item?'})
+		if self._disp_model.related_tables:
 			field_names = self._disp_model.related_tables.keys()
 			self._add_hot(field_names)
 			for field_name in field_names:
 				links.append({'onclick': "edit_related('%s')" % field_name,  
 							'name': 'Edit Associated ' + public.get_verbose_name(self._disp_model, field_name)})
-		if hasattr(self._disp_model, 'HotTable'):
+		if self._disp_model.HotTable:
 			for field_name in self._disp_model.HotTable.Meta.fields:
 				dj_field = self._disp_model.model._meta.get_field_by_name(field_name)[0]
 				if isinstance(dj_field, models.ManyToManyField):
 					links.append({'onclick': "edit_m2m('%s')" % field_name,  
 								'name': 'Edit Associated ' + public.get_verbose_name(self._disp_model, field_name)})
 					self._add_hot([field_name])
+		if self._disp_model.extra_buttons:
+			links.extend(self._disp_model.extra_buttons(self))
 		return links
 	
 	def _add_hot(self, field_names):
@@ -256,12 +258,14 @@ class UserDisplay(DisplayItem):
 	side_menu = False
 	
 	def setup_context(self, **kw):
+		if self.request.META['HTTP_REFERER'].endswith('change_password'):
+			self.request.session['success'] = 'Password changed successfully'
 		kw ['model'] = 'User'
 		kw['id'] = str(self.request.user.id)
 		super(UserDisplay, self).setup_context(**kw)
 	
 	def set_links(self):
-		links = [{'url': reverse('password_reset_recover'), 'name': 'Change Password'}]
+		links = [{'url': reverse('change_password'), 'name': 'Change Password'}]
 		links += super(UserDisplay, self).set_links()
 		links.append({'url': reverse('logout'), 'name': 'Logout'})
 		return links

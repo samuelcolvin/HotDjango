@@ -3,6 +3,7 @@ import editor
 import views
 import views_base as viewb
 import public
+from django.contrib.auth.views import password_change
 
 hd_urlpatterns = patterns('',
     url(r'^$', views.DisplayModel.as_view(), name= public.HOT_URL_NAME),
@@ -27,4 +28,5 @@ urlpatterns = patterns('HotDjango.views',
     url(r'^login/$', 'login', name='login'),
     url(r'^logout/$', 'logout', name='logout'),
     url(r'^', include('password_reset.urls')),
+    url(r'^change_password$', editor.change_password, name='change_password')
 )

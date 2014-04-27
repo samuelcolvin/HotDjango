@@ -134,6 +134,9 @@ class ModelDisplay(object):
     index = 100
     models2link2 = None
     permitted_groups = None
+    related_tables = None
+    HotTable = None
+    extra_buttons = None
     
     
 class ModelDisplayMeta(object):

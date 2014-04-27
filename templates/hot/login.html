@@ -12,6 +12,9 @@
 	<form method="post" class="form-signin">
 		<h2 class="form-signin-heading">Login</h2>
 		{% csrf_token %}
+		<div class="reset-password">
+			<a href="{% url "password_reset_recover" %}">Reset Password</a>
+		</div>
 		{% load bootstrap %}
 		{{ form|bootstrap }}
 	    <button class="btn btn-lg btn-primary btn-block" type="submit">login</button>
