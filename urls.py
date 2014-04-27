@@ -3,7 +3,6 @@ import editor
 import views
 import views_base as viewb
 import public
-from django.contrib.auth.views import password_change
 
 hd_urlpatterns = patterns('',
     url(r'^$', views.DisplayModel.as_view(), name= public.HOT_URL_NAME),
