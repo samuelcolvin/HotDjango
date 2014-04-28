@@ -159,7 +159,10 @@ class DisplayItem(viewb.TemplateBase):
 				value = 'Not Found'
 			item_fields.append({'name': name, 'state': value })
 		for name, func in dm.extra_funcs:
-			value = getattr(item, func)()
+			if hasattr(dm, func):
+				value = getattr(dm, func)(item)
+			else:
+				value = getattr(item, func)()
 			value = self._convert_to_string(value)
 			item_fields.append({'name': name, 'state': value})
 		for name, field in dm.extra_fields.items():
