@@ -41,9 +41,9 @@ def get_display_apps():
         for ob_name in dir(app_display):
             ob = getattr(app_display, ob_name)
             if inspect.isclass(ob) and issubclass(ob, ModelDisplay):
-                if ob.model in models:
+                if ob_name in models:
                     continue
-                models.add(ob.model)
+                models.add(ob_name)
                 apps[app_name][ob_name] = ob
                 apps[app_name][ob_name]._app_name = app_name
     return apps, extra_render

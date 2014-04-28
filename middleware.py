@@ -10,7 +10,7 @@ check_auth = True
 if hasattr(settings, 'HOT_PERMITTED_GROUPS') and settings.HOT_PERMITTED_GROUPS == 'ALL':
     print '************\n'
     print "   WARNING: LoginRequiredMiddleware disabled because HOT_PERMITTED_GROUPS = 'ALL'"
-    print '   Anonymous maybe be able to see HotDjango pages!'
+    print '   Anonymous users maybe be able to see HotDjango pages!'
     print '\n************'
     class LoginRequiredMiddleware:
         pass

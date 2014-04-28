@@ -24,7 +24,6 @@ class ViewBase(object):
         try:
             self.setup_context(**kw)
         except ObjectDoesNotExist:
-            import traceback;traceback.print_exc()
             print 'ObjectDoesNotExist'
             return redirect(reverse('permission_denied'))
         if not self.allowed:
