@@ -32,6 +32,7 @@ tbody tr:hover {
 	padding-top: 5px;
 	padding-bottom: 5px;
 }
+
 .navbar-brand.logo img {
 	height: 40px;
 }
@@ -89,5 +90,8 @@ tbody tr:hover {
 @media (max-width: 600px){
 	.dl-horizontal {
 		font-size: 90%;
+	}
+	.navbar-brand.logo img {
+		max-width: 240px;
 	}
 }
