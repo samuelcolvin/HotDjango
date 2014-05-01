@@ -19,7 +19,7 @@
 			{% endfor %}
 		</dl>
 	{% endfor %}
-	{{ extra_content|safe }}
+	{{ extra_content_above_table|safe }}
 	{% if tables_below %}
 		{% load render_table from django_tables2 %}
 		{% for table in tables_below %}
@@ -32,6 +32,7 @@
 	{% if hot %}
 		{% handsontable_render_extra app_name model_name hot_fields this_item_id %}
 	{% endif %}
+	{{ extra_content_below_table|safe }}
 	
 {% endblock %}
 
