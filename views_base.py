@@ -262,6 +262,10 @@ def get_plural_name(dm):
 def get_single_name(dm):
     return  unicode(dm.model._meta.verbose_name)
 
+def is_mobile(request):
+    ua = request.META['HTTP_USER_AGENT'].lower()
+    return any(phone_os in ua for phone_os in ('iphone', 'android', 'bb10'))
+
 def basic_context(request, menu_active = None):
     if menu_active is not None:
         request.session['menu_active'] = menu_active

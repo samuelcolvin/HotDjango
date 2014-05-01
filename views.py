@@ -15,17 +15,26 @@ import django.views.generic as generic
 from django.core.context_processors import csrf
 import django.utils.formats as django_format
 from django.core.exceptions import ObjectDoesNotExist
+import settings
+
+DEFAULT_LOGIN_TEMPLATE = 'hot/login.html'
+
+def login_template():
+	if hasattr(settings, 'LOGIN_TEMPLATE'):
+		return settings.LOGIN_TEMPLATE
+	return DEFAULT_LOGIN_TEMPLATE
 
 def logout(request):
 	auth_logout(request)
 	return redirect(reverse(settings.INDEX_URL_NAME))
 
-def login(*args):
-	template = 'hot/login.html'
+def login(request, *args):
+	template = login_template()
 	if hasattr(settings, 'LOGIN_TEMPLATE'):
 		template = settings.LOGIN_TEMPLATE
-	kw = {'template_name': template}
-	return django.contrib.auth.views.login(*args, **kw)
+	kw = {'template_name': template, 
+		'extra_context': {'is_mobile': viewb.is_mobile(request)}}
+	return django.contrib.auth.views.login(request, *args, **kw)
 
 class Index(viewb.TemplateBase):
 	template_name = 'hot/index.html'

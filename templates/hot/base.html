@@ -21,7 +21,7 @@
 		{% endif %}
 		{% block extra_css %}{% endblock %}
 	</head>
-	<body>
+	<body {% block body_attr %}{% endblock %}>
 		{% block body %}{% endblock %}
 		{% if debug %}
 		<script src="{% static "hot_libs/js/jquery-1.11.0.js" %}"></script>
