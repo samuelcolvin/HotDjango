@@ -2,6 +2,9 @@
 django-hot
 ==========
 
+* todo refactor views
+* allow subclassing by looking for links better
+
 **Currently a work in progress as [django-skeletal-display](https://github.com/samuelcolvin/django-skeletal-display) and [django-handsontable](https://github.com/samuelcolvin/django-handsontable) are combined.**
 
 Django app for displaying data - like the admin interface, but pretty and for displaying as well as editing data
