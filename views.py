@@ -14,6 +14,7 @@ import public
 import django.views.generic as generic
 from django.core.context_processors import csrf
 import django.utils.formats as django_format
+from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 import settings
 
@@ -217,7 +218,7 @@ class DisplayItem(viewb.TemplateBase):
 		elif isinstance(value, (long, int, float)):
 			return self._find_base(value)
 		elif isinstance(value, datetime):
-			return django_format.date_format(value, 'DATETIME_FORMAT')
+			return django_format.date_format(timezone.localtime(value), 'DATETIME_FORMAT')
 		elif isinstance(value, models.Model):
 			name = value.__class__.__name__
 			if self._disp_model.models2link2 and name not in self._disp_model.models2link2.keys():
