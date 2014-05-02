@@ -214,6 +214,7 @@ class ModelEditView(ViewBase,
     model = None
     object = None
     alert_all_errors = False
+    template_name = 'hot/add_edit.html'
     
     def post(self, request, *args, **kw):
         self.setup_context(**kw)
@@ -247,6 +248,10 @@ class ModelEditView(ViewBase,
         if not 'errors' in self.request.session:
             self.request.session['errors'] = []
         self.request.session['errors'].append(line)
+    
+    def get_context_data(self, **kw):
+        self._context.update(super(ModelEditView, self).get_context_data(**kw))
+        return self._context
     
     def form_valid(self, form):
         form.request = self.request

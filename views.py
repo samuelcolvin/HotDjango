@@ -211,7 +211,6 @@ class DisplayItem(viewb.TemplateBase):
 	def _convert_to_string(self, value, field = None):
 		if value == None:
 			return ''
-		print type(field)
 		if field and len(field.choices) > 0:
 			cdict = dict(field.choices)
 			if value in cdict:
