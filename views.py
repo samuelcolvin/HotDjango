@@ -17,6 +17,13 @@ import django.utils.formats as django_format
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 import settings
+from django.contrib.auth.forms import AuthenticationForm
+
+class AuthForm(AuthenticationForm):
+	def __init__(self, request=None, *args, **kwargs):
+		super(AuthForm, self).__init__(request, *args, **kwargs)
+		self.fields['password'].widget = forms.PasswordInput(attrs={'placeholder': 'Password'})
+		self.fields['username'].widget = forms.TextInput(attrs={'placeholder': 'Username'})
 
 DEFAULT_LOGIN_TEMPLATE = 'hot/login.html'
 
@@ -34,7 +41,8 @@ def login(request, *args):
 	if hasattr(settings, 'LOGIN_TEMPLATE'):
 		template = settings.LOGIN_TEMPLATE
 	kw = {'template_name': template, 
-		'extra_context': {'is_mobile': viewb.is_mobile(request)}}
+		'extra_context': {'is_mobile': viewb.is_mobile(request)},
+		'authentication_form': AuthForm}
 	return django.contrib.auth.views.login(request, *args, **kw)
 
 class Index(viewb.TemplateBase):
@@ -102,7 +110,7 @@ class DisplayItem(viewb.TemplateBase):
 	
 	def get_context_data(self, **kw):
 		self._context['page_menu'] = self.set_links()
-		status_groups=[{'title': None, 'fields': self._populate_fields(self._item, self._disp_model)}]
+		status_groups = [{'title': None, 'fields': self._populate_fields(self._item, self._disp_model)}]
 		
 		for field_name, model_name in self._disp_model.extra_models.items():
 			model = getattr(self._item, field_name)
@@ -114,8 +122,7 @@ class DisplayItem(viewb.TemplateBase):
 		self._context['tables_below'] = self._populate_tables(self._item, self._disp_model)
 		
 		name = str(self._disp_model.model.objects.get(id=int(self._item_id)))
-		self.set_crums(add = [{'url': 
-		                    reverse(self.viewname, args=self.args_base(model = self._model_name) + [int(self._item_id)]), 'name': name}])
+		self.set_crums(add = [{'url': reverse(self.viewname, args=self.args_base(model = self._model_name) + [int(self._item_id)]), 'name': name}])
 		title = '%s: %s' %  (self._single_t, self._item.__unicode__())
 		self._context['title'] = title
 		return self._context
@@ -204,10 +211,13 @@ class DisplayItem(viewb.TemplateBase):
 	def _convert_to_string(self, value, field = None):
 		if value == None:
 			return ''
+		print type(field)
 		if field and len(field.choices) > 0:
 			cdict = dict(field.choices)
 			if value in cdict:
 				return cdict[value]
+		if isinstance(field, models.URLField):
+			return '<a href="%s" target="blank">%s</a>' % (value, value)
 		if isinstance(value, bool):
 			if value:
 				return '<span class="glyphicon glyphicon-ok"></span>'
