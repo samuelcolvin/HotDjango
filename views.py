@@ -40,9 +40,11 @@ def login(request, *args):
 	template = login_template()
 	if hasattr(settings, 'LOGIN_TEMPLATE'):
 		template = settings.LOGIN_TEMPLATE
+	context = viewb.set_messages(request)
+	context['is_mobile'] = viewb.is_mobile(request)
 	kw = {'template_name': template, 
-		'extra_context': {'is_mobile': viewb.is_mobile(request)},
-		'authentication_form': AuthForm}
+		  'extra_context': context,
+		  'authentication_form': AuthForm,}
 	return django.contrib.auth.views.login(request, *args, **kw)
 
 class Index(viewb.TemplateBase):
@@ -280,7 +282,8 @@ class UserDisplay(DisplayItem):
 	side_menu = False
 	
 	def setup_context(self, **kw):
-		if self.request.META['HTTP_REFERER'].endswith('change_password'):
+		referrer = self.request.META.get('HTTP_REFERER')
+		if referrer and referrer.endswith('change_password'):
 			self.request.session['success'] = 'Password changed successfully'
 		kw ['model'] = 'User'
 		kw['id'] = str(self.request.user.id)

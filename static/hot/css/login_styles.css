@@ -50,3 +50,7 @@ body {
 .form-signin .form-group{
 	margin-bottom: 0px;
 }
+
+.msgs {
+	margin: 20px;
+}

@@ -9,6 +9,22 @@
 
 {% block body %}
 <div class="container">
+	<div class='msgs'>
+		{% if success %}
+		<div class="alert alert-success">
+			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+			{% for s in success %} <p> {{s}} </p> {% endfor %}
+		</div>
+		{% endif %}
+		
+		{% if errors %}
+		<div class="alert alert-danger">
+			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+			{% for error in errors %} <p> {{error}} </p> {% endfor %}
+		</div>
+		{% endif %}
+	</div>
+	
 	<form method="post" class="form-signin">
 		<h2 class="form-signin-heading">Login</h2>
 		{% csrf_token %}
