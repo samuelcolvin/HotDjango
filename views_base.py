@@ -231,7 +231,7 @@ class ModelEditView(ViewBase,
         self.error_log('Form not Valid')
         general_errors = form.non_field_errors()
         if len(general_errors) > 0:
-            self.error_log('General Errors: %r' % general_errors)
+            self.error_log(', '.join(general_errors))
         if self.alert_all_errors:
             for name, errors in form.errors.items():
                 if name != '__all__':
