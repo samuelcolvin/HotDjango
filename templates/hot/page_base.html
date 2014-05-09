@@ -23,7 +23,7 @@
       	
       	{{ pre_top_menu|safe }}
         {% for item in top_menu %}
-		<li class="{{item.class}}"><a href="{{item.url}}">{{item.name}}
+		<li class="{{item.class}}"><a href="{{item.url}}" title="{{ item.title }}">{{item.name}}
 			{% if item.glyph %}&nbsp;<span class="glyphicon glyphicon-{{ item.glyph }}"></span> {% endif %}
 			</a></li>
 		{% endfor %}

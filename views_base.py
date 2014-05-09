@@ -297,8 +297,8 @@ def basic_context(request, menu_active = None):
     top_menu = []
     for item in raw_menu:
         menu_item = {'url': reverse(item['url']), 'name': item['name']}
-        if 'glyph' in item:
-            menu_item['glyph'] = item['glyph']
+        menu_item['glyph'] = item.get('glyph')
+        menu_item['title'] = item.get('title')
         if item['url'] == menu_active:
             menu_item['class'] = 'active'
         top_menu.append(menu_item)
