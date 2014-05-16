@@ -3,10 +3,9 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-		<meta name="description" content="">
+		{% block extra_meta %}<meta name="description" content="">
 		<meta name="author" content="">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge"> 
-		{% block extra_meta %}{% endblock %}
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">{% endblock %}
 		<title>{{title}}</title>
 		{% load staticfiles %}
 		<link rel="icon" type="image/png" href="{% static "favicon.png" %}" />
