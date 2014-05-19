@@ -62,6 +62,12 @@ class AddEditItem(viewb.ViewBase, generic_editor.TemplateResponseMixin, generic_
         else:
             self.form_class = form_models.modelform_factory(self._disp_model.model)
         self.form_class.request = self.request
+        
+    def get_form_kwargs(self):
+        kwargs = super(AddEditItem, self).get_form_kwargs()
+        if hasattr(self.form_class, 'pass_request') and self.form_class.pass_request:
+            kwargs['request'] = self.request
+        return kwargs
     
     def post(self, request, *args, **kw):
         self.setup_context(**kw)
