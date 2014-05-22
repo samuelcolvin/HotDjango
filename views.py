@@ -168,20 +168,23 @@ class DisplayItem(viewb.TemplateBase):
 		
 	def _populate_fields(self, item, dm, exceptions=[]):
 		item_fields=[]
-		for field in dm.model._meta.fields:
-			if field.name in exceptions or field.name in dm.exclude:
-				continue
-			name = field.verbose_name
-			try:
-				value = self._convert_to_string(getattr(item, field.name), field)
-			except ObjectDoesNotExist:
-				value = 'Not Found'
-			item_fields.append({'name': name, 'state': value })
+		if not dm.exclude_all:
+			for field in dm.model._meta.fields:
+				if field.name in exceptions or field.name in dm.exclude:
+					continue
+				name = field.verbose_name
+				try:
+					value = self._convert_to_string(getattr(item, field.name), field)
+				except ObjectDoesNotExist:
+					value = 'Not Found'
+				item_fields.append({'name': name, 'state': value })
 		for name, func in dm.extra_funcs:
 			if hasattr(dm, func):
 				value = getattr(dm, func)(item)
 			else:
-				value = getattr(item, func)()
+				value = getattr(item, func)
+				if hasattr(value, '__call__'):
+					value = value()
 			value = self._convert_to_string(value)
 			item_fields.append({'name': name, 'state': value})
 		for name, field in dm.extra_fields.items():

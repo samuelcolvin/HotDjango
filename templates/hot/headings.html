@@ -22,7 +22,7 @@
 	{% if success %}
 	<div class="alert alert-success">
 		<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-		{% for s in success %} <p> {{s}} </p> {% endfor %}
+		{% for s in success %} <p> {{ s|safe }} </p> {% endfor %}
 	</div>
 	{% else %}
 	<div class="alert alert-success" style="display:none">
@@ -33,7 +33,7 @@
 	{% if info %}
 	<div class="alert alert-info">
 		<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-		{% for info_i in info %} <p> {{info_i}} </p> {% endfor %}
+		{% for info_i in info %} <p> {{ info_i|safe }} </p> {% endfor %}
 	</div>
 	{% else %}
 	<div class="alert alert-info" style="display:none">
@@ -44,7 +44,7 @@
 	{% if errors %}
 	<div class="alert alert-danger">
 		<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-		{% for error in errors %} <p> {{error}} </p> {% endfor %}
+		{% for error in errors %} <p> {{ error|safe }} </p> {% endfor %}
 	</div>
 	{% else %}
 	<div class="alert alert-danger" style="display:none">

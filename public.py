@@ -122,6 +122,7 @@ class ModelDisplay(object):
     extra_models = {}
     attached_tables = []
     exclude = []
+    exclude_all = False
     show_crums = True
     display = True
     addable = True
