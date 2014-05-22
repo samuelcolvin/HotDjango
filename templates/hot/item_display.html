@@ -11,13 +11,23 @@
 
 {% block content %}
 	{% for group in status_groups %}
-		{% if group.title %}<strong>{{group.title}}</strong>{% endif %}
-		<dl class="dl-horizontal item-display">
-			{% for item in group.fields %}
-		    	<dt>{{item.name}}</dt>
-				<dd>{{item.state|safe}}</dd>
-			{% endfor %}
-		</dl>
+		<div class="detail-group">
+			{% if group.title %}
+				<strong>{{group.title}}</strong>
+				{% if group.collapse %}
+				<a data-toggle="collapse" href="#cola{% cycle 1 2 3 4 5 6 7 8 9 as index %}">
+	          	<span class="glyphicon glyphicon-sort-by-attributes"></span>
+	        	</a>
+				{% endif %}
+	        {% endif %}
+			<dl {% if group.collapse %}id="cola{{ index }}"{% endif %} 
+			class="dl-horizontal item-display{% if group.collapse %} collapse{% endif %}{% if group.visible %} in{% endif %}">
+				{% for item in group.fields %}
+			    	<dt>{{item.name}}</dt>
+					<dd>{{item.state|safe}}</dd>
+				{% endfor %}
+			</dl>
+		</div>
 	{% endfor %}
 	{{ extra_content_above_table|safe }}
 	{% if tables_below %}

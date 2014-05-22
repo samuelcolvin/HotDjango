@@ -114,11 +114,21 @@ class DisplayItem(viewb.TemplateBase):
 		self._context['page_menu'] = self.set_links()
 		status_groups = [{'title': None, 'fields': self._populate_fields(self._item, self._disp_model)}]
 		
-		for field_name, model_name in self._disp_model.extra_models.items():
-			model = getattr(self._item, field_name)
-			field =self._item._meta.get_field_by_name(field_name)[0]
+		for extra in self._disp_model.extra_models:
+			model_name = extra['model']
+			if extra['field'] == 'self':
+				model = self._item
+				title = ''
+			else:
+				model = getattr(self._item, extra['field'])
+				title =self._item._meta.get_field_by_name(extra['field'])[0].verbose_name
+			title = extra.get('title', title)
+			visible = extra.get('visible', False)
 			if model:
-				status_groups.append({'title': field.verbose_name, 'fields': self._populate_fields(model, self._apps[self._app_name][model_name])})
+				status_groups.append({'title': title, 
+									'fields': self._populate_fields(model, self._apps[self._app_name][model_name]),
+									'collapse': True,
+									'visible': visible})
 		
 		self._context['status_groups'] = status_groups
 		self._context['tables_below'] = self._populate_tables(self._item, self._disp_model)

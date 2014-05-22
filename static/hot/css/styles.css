@@ -64,6 +64,10 @@ tbody tr:hover {
 	display: none;
 }
 
+.detail-group {
+	margin-bottom: 20px;
+}
+
 @media (max-width: 768px){
 	body {
 		background-color: white;
