@@ -13,11 +13,9 @@
 	{% for group in status_groups %}
 		<div class="detail-group">
 			{% if group.title %}
-				<strong>{{group.title}}</strong>
+				<h3>{{group.title}}</h3>
 				{% if group.collapse %}
-				<a data-toggle="collapse" href="#cola{% cycle 1 2 3 4 5 6 7 8 9 as index %}">
-	          	<span class="glyphicon glyphicon-sort-by-attributes"></span>
-	        	</a>
+				<a data-toggle="collapse" href="#cola{% cycle 1 2 3 4 5 6 7 8 9 as index %}" class="btn btn-default btn-sm drop-button">View</a>
 				{% endif %}
 	        {% endif %}
 			<dl {% if group.collapse %}id="cola{{ index }}"{% endif %} 

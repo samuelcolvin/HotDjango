@@ -1,6 +1,7 @@
 {% extends base_template %}
 
 {% block content %}
+	{{ form_prefix | safe }}
 	<form method="post" action="">
 	{% load bootstrap %}
 	{% csrf_token %}

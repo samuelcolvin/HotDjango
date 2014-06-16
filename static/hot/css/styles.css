@@ -72,6 +72,24 @@ tbody tr:hover {
 	margin: 0;
 }
 
+.detail-group .glyphicon-remove {
+	color: red;
+}
+
+.detail-group .glyphicon-ok {
+	color: green;
+}
+
+.detail-group h3 {
+	display: inline-block;
+	margin: 0px;
+}
+
+.detail-group .drop-button {
+	margin-top: -12px;
+	margin-left: 10px;
+}
+
 @media (max-width: 768px){
 	body {
 		background-color: white;
