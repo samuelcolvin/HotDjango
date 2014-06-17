@@ -22,8 +22,8 @@ from django.contrib.auth.forms import AuthenticationForm
 class AuthForm(AuthenticationForm):
 	def __init__(self, request=None, *args, **kwargs):
 		super(AuthForm, self).__init__(request, *args, **kwargs)
-		self.fields['password'].widget = forms.PasswordInput(attrs={'placeholder': 'Password'})
-		self.fields['username'].widget = forms.TextInput(attrs={'placeholder': 'Username'})
+		self.fields['password'].widget = forms.PasswordInput(attrs={'placeholder': 'PASSWORD'})
+		self.fields['username'].widget = forms.TextInput(attrs={'placeholder': 'USERNAME'})
 
 DEFAULT_LOGIN_TEMPLATE = 'hot/login.html'
 
