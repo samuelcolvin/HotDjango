@@ -259,7 +259,8 @@ class DisplayItem(viewb.TemplateBase):
 			if value.name:
 				return '<a href="%s"><img src="%s" alt="image unavailable"></a>' % \
 						(value.url, value.url)
-			else: return ''
+			else:
+				return '<span class="blank-image"></span>'
 		return smart_str(value)
 				
 	def _find_model(self, to_find):
